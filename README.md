@@ -42,7 +42,7 @@
 
 - Windows 10 19041+ / Windows 11（x64）
 - [.NET SDK 10](https://dotnet.microsoft.com/download)
-- Python 3.11（本地检索与聊天数据适配）
+- Python 3.11 —— 安装后需把 `MemoryAssistant.App/appsettings.json` 里的 `pythonBridge.pythonExePath` 改成你的解释器路径（或用环境变量 `PYTHON_EXE_PATH` 覆盖）
 - 聊天数据访问依赖独立的 `wxchat` 数据适配 SDK（**本仓库不包含**，路径配置在 `python_bridge/wxchat_adapter.py` 顶部）
 
 ### 构建与运行
@@ -153,7 +153,7 @@ dotnet test MemoryAssistant.Tests/MemoryAssistant.Tests.csproj
 | `LLM_MODEL` / `LLM_BASE_URL` | 模型名 / 接口地址（默认 DeepSeek） |
 | `PYTHON_EXE_PATH` | Python 解释器路径 |
 | `BRIDGE_SCRIPT_PATH` | Python Bridge 入口脚本路径 |
-| `WXCHAT_DATA_DIR` | 聊天数据目录 |
+| `WXCHAT_DATA_DIR` / `WXCHAT_SNAPSHOT_DIR` | 预留字段（当前聊天数据路径在 `python_bridge/wxchat_adapter.py` 顶部配置） |
 | `AGENT_ECO_MODE` | 节流模式开关 |
 
 ## 隐私说明
@@ -404,7 +404,7 @@ P9 增量索引桥接方法：
 
 ## 已知问题 / 注意
 
-- 微信数据在 `D:\智能比赛\wxchat`（中文路径），SDK v0.4.0 自动把快照重定位到 `D:\wxchat_snapshot\`（welive 无法在非 ASCII 路径执行 search）。
+- 聊天数据目录若含非 ASCII 字符，SDK 会自动把快照重定位到「数据盘根目录 `\wxchat_snapshot\<wxid>`」（底层检索工具无法在非 ASCII 路径下执行全文检索）。
 - 工具输出已做敏感信息脱敏（手机 / 身份证 / 邮箱 / 银行卡）。
 - `get_session_stats` 为**会话级样本统计**：带 session_id 时读该会话最近 limit 条；不带时仅扫最近活跃 10 个会话（每会话最多 50 条），防止全量扫描拖垮单线程 Bridge。精确全量计数需后续 SQLite 索引。
 - `get_group_members` 的 `display_name` 目前为空（SDK `group_members` 不含昵称），后续用 `group_nicknames` 补充。
