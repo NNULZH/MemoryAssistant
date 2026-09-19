@@ -1,52 +1,174 @@
 # Memory Assistant
 
-微信聊天记录回忆助手。本地优先，C# + WPF 桌面客户端，Python 作为微信数据 SDK（wxchat v0.4.0）的适配层。
+> 本地优先的微信聊天记录回忆助手 · C# / WPF · 自写 Agent 运行时
 
-核心体验：**记忆 → 证据 → 时间 → 人物 → 原文**。用户用自然语言询问过去发生过什么，Agent 规划、调用工具、检索证据并生成带来源的回答。
+[![Platform](https://img.shields.io/badge/platform-Windows%2010%2B-0078D6)](#快速开始)
+[![.NET](https://img.shields.io/badge/.NET-10-512BD4)](#快速开始)
+[![UI](https://img.shields.io/badge/UI-WPF%20%2B%20WPF--UI-2C3E50)](#架构)
+[![Tests](https://img.shields.io/badge/tests-521%20passing-3FB950)](#测试)
+
+用自然语言问一句「去年我和谁聊过秋招」「我答应过别人什么事还没做」，助手会自己规划步骤、调用工具，
+在**本地索引**与**聊天原文**之间完成两级取证，最后给出**带来源引用**的回答——每条结论都能点开看原文。
+
+两条贯穿全局的原则：
+
+- **Workflow 负责确定性，Agent 负责灵活探索。**
+- **向量检索只负责定位区域，工具读取原文完成精确取证。**
+
+## 特性
+
+- **自主 Agent 循环** — `Plan → Execute → Evaluate → Replan`。模型产出的计划先过代码级校验，非法计划不会进入执行器；LLM 不可用或返回脏 JSON 时静默回退规则规划（零 token）。
+- **两级检索** — 向量粗排定位「哪些会话、哪一天」，再由工具精读原文取证。粗排的定位误差不会变成事实错误。
+- **可追溯回答** — 证据具备完整生命周期（候选 → 观测 → 验证 → 引用）与稳定编号，回答里的 `[N]` 可点开原文。
+- **多轮追问** — 「他 / 那条 / 还有吗 / 第 N 条」能接住上文，「展开第 N 条」直接复用上一轮证据而不重复检索。
+- **工具注册表 + 清单热注册** — 工具声明真实 JSON Schema（参数类型、必填、取值范围）；往 `data/tools/` 丢一个 `*.tool.json` 即可上架新工具，删除即下架。
+- **任务与常驻** — 一次性需求可固化成任务，交由后台调度器按周期执行；关窗不退出，托盘常驻。
+- **算力克制** — Eco 模式在数据读取的唯一漏斗处限流，另有工具次数 / 失败次数 / 任务超时 / 换策略轮数四类预算；embedding 在本地推理，检索不依赖云向量库。
+- **写操作安全边界** — 默认只读；发送消息等写操作必须经人工确认，可选择「以后都允许」并全程留痕。
+
+## 界面
+
+| 概览 | 对话与执行过程 |
+| --- | --- |
+| ![概览](docs/images/overview.png) | ![对话与执行过程](docs/images/agent-execution.png) |
+
+写操作前的人工确认：模型可以发起意图，但必须由人点头才会真正执行。
+
+![写操作确认](docs/images/write-confirmation.png)
+
+## 快速开始
+
+### 环境要求
+
+- Windows 10 19041+ / Windows 11（x64）
+- [.NET SDK 10](https://dotnet.microsoft.com/download)
+- Python 3.11（本地检索与聊天数据适配）
+- 聊天数据访问依赖独立的 `wxchat` 数据适配 SDK（**本仓库不包含**，路径配置在 `python_bridge/wxchat_adapter.py` 顶部）
+
+### 构建与运行
+
+```powershell
+git clone https://github.com/NNULZH/MemoryAssistant.git
+cd MemoryAssistant
+dotnet build MemoryAssistant.slnx
+
+# 自检：不调用 LLM、不消耗 token
+dotnet run --project MemoryAssistant.App -- --smoke
+
+# 启动图形界面
+dotnet run --project MemoryAssistant.App
+```
+
+### 配置模型
+
+程序不内置任何密钥。任选一种方式：
+
+**环境变量（推荐）**
+
+```powershell
+$env:LLM_API_KEY = "sk-..."
+```
+
+**本机配置文件** — 在 `MemoryAssistant.App/` 下新建 `appsettings.local.json`（已 gitignore）：
+
+```json
+{
+  "llm": { "apiKey": "sk-...", "model": "deepseek-flash" }
+}
+```
+
+**图形界面** — 启动后在「设置」页填入 API Key 并点击保存。该页是显式保存：有改动未保存时会提示，避免误以为已自动生效。
 
 ## 架构
 
 ```
-WPF Desktop (MemoryAssistant.App)
-   │  MVVM + WPF-UI
-   ▼
-C# Application Core (Core / Infrastructure / Features)
-   │  AgentOrchestrator / WorkflowEngine / ToolRegistry
-   ├── LLM Provider (DeepSeek / OpenAI 兼容)     ← HTTP
-   └── Python Bridge (JSON Lines over stdin/stdout) ← wxchat SDK
+WPF 桌面端 (MemoryAssistant.App)                    MVVM + WPF-UI
+        │
+        ▼
+应用核心 (Core / Infrastructure / Features)
+        ├── AgentOrchestrator    计划 → 执行 → 评估 → 换策略
+        ├── Skills × 8           recall / stats / timeline / commitment
+        │                        topic / profile / wechat / chitchat
+        ├── EvidenceStore        证据生命周期 + 稳定编号
+        ├── ToolRegistry         真实 JSON Schema + 清单热注册
+        ├── WorkflowEngine       确定性管线（与 Agent 并存、互为兜底）
+        ├── ChatClient           Function Calling / 流式 / 重试
+        └── Python Bridge        JSON Lines over stdin/stdout
+                 │
+                 ▼
+本地数据层：向量索引（bge-small-zh-v1.5，离线）+ 聊天记录原文
 ```
 
-核心原则：**Workflow 负责确定性，Agent 负责灵活探索。**
-**Vector Search 定位候选区域，Tool 读取原文完成精确取证。**
-
-## 项目结构
+### 分层职责
 
 | 项目 | 职责 |
-|---|---|
-| `MemoryAssistant.App` | WPF 桌面入口（`--smoke` 可跑控制台自检） |
-| `MemoryAssistant.Core` | 领域模型、接口（配置 / 日志 / Bridge 抽象） |
-| `MemoryAssistant.Infrastructure` | 配置加载、控制台日志、Python Bridge 客户端 |
-| `MemoryAssistant.Features` | Recall / Timeline / Commitments / Topics（后续阶段） |
-| `python_bridge/` | Python 侧：`bridge.py`（JSON Lines 协议）+ `wxchat_adapter.py`（SDK 封装） |
+| --- | --- |
+| `MemoryAssistant.App` | WPF 界面与视图模型、托盘与全局热键、写操作确认窗 |
+| `MemoryAssistant.Core` | 领域模型与接口：Agent 运行时、规划器、技能、证据、工作流、任务 |
+| `MemoryAssistant.Infrastructure` | 模型客户端、Python Bridge、检索实现、任务持久化 |
+| `MemoryAssistant.Features` | 承诺 / 话题 / 画像等特化分析服务 |
+| `MemoryAssistant.Tests` | 521 个单元测试（零 LLM、零真实数据） |
+| `python_bridge/` | Python 侧：JSON Lines 协议、聊天数据适配、本地向量检索 |
 
-## 快速开始
+## 一次问答的生命周期
 
-环境要求：.NET SDK 10、Python 3.11（`D:\anaconda\python.exe`）。
+1. **查询理解** — 解析出实体 / 时间 / 关键词 / 是否需要原文证据（规则实现，零 token）
+2. **多轮改写** — 把「他 / 第 3 条 / 还有吗」改写成完整问题；「展开第 N 条」直接复用上一轮证据
+3. **建任务** — 进入任务运行时：可观察状态机、取消向下传播、四类预算
+4. **规划** — 模型产出 JSON 计划 → 解析 → 代码级校验 → 任一步失败即回退规则规划
+5. **执行** — 技能逐个执行，每步消耗一次预算；单个技能抛异常只标记该步失败，不炸整个任务
+6. **取证** — 向量粗排定位会话与日期 → 工具精读原文（原文优先覆盖检索片段）+ 噪音过滤 + 时间窗过滤
+7. **评估** — 证据足够则作答；可恢复失败则换策略（跳过已试过的能力、计划签名去重防死循环）；预算耗尽或取消则诚实终止
+8. **作答** — 证据统一编号后交给模型组织成自然语言，回答带 `[N]` 引用；同时产出执行轨迹（只展示步骤与证据，不暴露思维链）
 
-```bash
-# 1. 构建
-dotnet build MemoryAssistant.slnx
+## 设计取舍
 
-# 2. 跑 Bridge 自检（P0/P1 验收）
-dotnet run --project MemoryAssistant.App -- --smoke
+**为什么 Agent 和 Workflow 都要保留？**
+确定性场景（「和谁聊得最多」）走固定管线，可预期、可复现、不被模型幻觉影响；开放场景（「最近有什么没做完的事」）需要自己拆解目标并更换策略。两者并存：Workflow 保下限，Agent 提上限。
 
-# 3. 正常启动（WPF 窗口）
-dotnet run --project MemoryAssistant.App
+**为什么不做「全量 RAG 一次问答」？**
+聊天记录是超长流水，全量召回会灌满上下文且结论不可追溯。所以拆成两级：粗排只负责定位区域，精读负责取证，两者职责不重叠。
+
+**为什么不用现成的 Agent 框架？**
+预算、取消、评估、换策略这些都需要可控且可解释，而框架里它们是黑盒。项目只保留必要的抽象接口（`IChatClient` / `IPlanner` / `IAgentSkill` / `IMemoryBackend`），实现可整体替换。
+
+**为什么用本地 embedding？**
+离线、免费、隐私不外流；索引规模为百 MB 级，暴力余弦已足够（实测 9000+ 记忆片段）。
+
+## 测试
+
+```powershell
+dotnet test MemoryAssistant.Tests/MemoryAssistant.Tests.csproj
 ```
 
-配置在 `MemoryAssistant.App/appsettings.json`，可用环境变量覆盖（`LLM_API_KEY` 等，见 `ConfigurationLoader`）。
+521 个测试全部确定性执行：以脚本化的 ChatClient 与假执行器替代真实模型与真实数据，不依赖网络、不消耗 token、可离线复现。
 
-## 当前实现状态
+## 配置项
+
+常用环境变量（完整列表见 `ConfigurationLoader`）：
+
+| 变量 | 说明 |
+| --- | --- |
+| `LLM_API_KEY` | 模型密钥 |
+| `LLM_MODEL` / `LLM_BASE_URL` | 模型名 / 接口地址（默认 DeepSeek） |
+| `PYTHON_EXE_PATH` | Python 解释器路径 |
+| `BRIDGE_SCRIPT_PATH` | Python Bridge 入口脚本路径 |
+| `WXCHAT_DATA_DIR` | 聊天数据目录 |
+| `AGENT_ECO_MODE` | 节流模式开关 |
+
+## 隐私说明
+
+- 聊天记录、索引与媒体文件全部留在本机，项目不包含任何上传通道。
+- 发布物中不含任何密钥；密钥通过环境变量或本机的 `appsettings.local.json` 注入。
+- 读操作是默认能力；发送消息等写操作必须经人工确认，且全程留痕。
+- 本仓库不包含任何真实聊天数据、媒体文件或联系人信息，演示数据与测试数据均为占位符。
+
+## 开发进度
+
+<details>
+<summary>按阶段记录（点击展开）</summary>
+
+### 实现状态（按阶段）
 
 - [x] P0 项目骨架：Solution、四层项目结构、配置系统、Logging、Python Bridge 进程管理
 - [x] P1 Python Bridge：JSON Lines 协议、wxchat Adapter、6 个基础工具
@@ -288,3 +410,9 @@ P9 增量索引桥接方法：
 - `get_group_members` 的 `display_name` 目前为空（SDK `group_members` 不含昵称），后续用 `group_nicknames` 补充。
 - 承诺候选为**规则初筛**（关键词正则，含误报），卡片与回答均标注"待确认"；`is_self` 依赖索引中自发言的显示名判定（见踩坑 8）。
 - 话题聚类固定 seed（KMeans 可复现）；簇名由 LLM 生成，每次可能略有差异。
+
+</details>
+
+## License
+
+MIT
