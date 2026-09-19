@@ -1,0 +1,35 @@
+<Application x:Class="MemoryAssistant.App.App"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+             xmlns:conv="clr-namespace:MemoryAssistant.App.Converters"
+             ShutdownMode="OnExplicitShutdown">
+    <!-- ShutdownMode=OnExplicitShutdown：主窗口收起/关闭后**进程与后台服务继续活着**
+         （任务照常巡检、全局刹车键继续有效）。这也解释了用户看到的现象——关掉窗口服务还在跑；
+         以前那只是"最后一个窗口没了但某个线程还挂着"的半死状态（Dispatcher 已停，热键收不到），
+         现在改成明确的长驻：只有 Ctrl+Alt+Q（或显式 Shutdown）才真正退出。 -->
+    <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ui:ThemesDictionary Theme="Light" />
+                <ui:ControlsDictionary />
+                <ResourceDictionary Source="Themes/DesignTokens.xaml" />
+                <ResourceDictionary Source="Themes/Styles.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+
+            <conv:BubbleTextBrushConverter x:Key="BubbleTextBrushConverter" />
+            <conv:InverseBoolConverter x:Key="InverseBoolConverter" />
+            <conv:InverseBoolVisibilityConverter x:Key="InverseBoolVisibility" />
+            <conv:NullToCollapsedConverter x:Key="NullToCollapsedConverter" />
+            <BooleanToVisibilityConverter x:Key="BoolToVisibility" />
+            <conv:CountToWidthConverter x:Key="CountToWidthConverter" />
+            <conv:EmptyStateVisibilityConverter x:Key="EmptyStateVisibility" />
+            <conv:PathToImageConverter x:Key="PathToImageConverter" />
+            <conv:TraceLevelToBrushConverter x:Key="TraceLevelToBrushConverter" />
+            <conv:ToolStateToBrushConverter x:Key="ToolStateToBrushConverter" />
+            <!-- 执行步骤（Agent 执行过程 / 工作流）共用 -->
+            <conv:StepKindToBrushConverter x:Key="StepKindToBrush" />
+            <conv:StepStateToBrushConverter x:Key="StepStateToBrush" />
+        </ResourceDictionary>
+    </Application.Resources>
+</Application>

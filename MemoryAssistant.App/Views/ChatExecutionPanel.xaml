@@ -1,0 +1,143 @@
+<UserControl x:Class="MemoryAssistant.App.Views.ChatExecutionPanel"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:MemoryAssistant.App.ViewModels"
+             d:DataContext="{d:DesignInstance Type=vm:ChatViewModel}"
+             mc:Ignorable="d">
+    <!--
+        右栏「执行过程」：回答"这是不是一个 Agent"。
+        默认只显示可观察的步骤（理解 → 规划 → 执行 → 工具/检索 → 作答 → 完成），
+        点某一步再展开它的参数与结果——默认简洁，深入信息按需展开（规范 §11）。
+        不展示模型私有推理（§12）。
+    -->
+    <Border Style="{StaticResource PanelCardStyle}" Padding="16">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <!-- 头部 -->
+            <StackPanel Grid.Row="0">
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="执行过程" Style="{StaticResource TextSectionStyle}" />
+                    <Border Style="{StaticResource StatusDotStyle}" Margin="8,0,0,0"
+                            Background="{Binding ExecutionState, Converter={StaticResource StepStateToBrush}}" />
+                </StackPanel>
+                <TextBlock Text="{Binding ExecutionStatus}" Style="{StaticResource TextMetaStyle}"
+                           Margin="0,8,0,0" TextWrapping="Wrap"
+                           Foreground="{Binding ExecutionState, Converter={StaticResource StepStateToBrush}}" />
+                <TextBlock Text="{Binding ExecutionQuery, StringFormat='本轮：{0}'}" Style="{StaticResource TextMicroStyle}"
+                           Margin="0,6,0,0" TextWrapping="Wrap"
+                           Visibility="{Binding ExecutionQuery, Converter={StaticResource NullToCollapsedConverter}}" />
+                <TextBlock Text="{Binding ExecutionSummary}" Style="{StaticResource TextMicroStyle}"
+                           Margin="0,4,0,0" TextWrapping="Wrap" Foreground="{StaticResource BrandBrush}"
+                           Visibility="{Binding ExecutionSummary, Converter={StaticResource NullToCollapsedConverter}}" />
+            </StackPanel>
+
+            <!-- 空状态：先说清楚这里会出现什么 -->
+            <StackPanel Grid.Row="1" Margin="0,20,0,0" VerticalAlignment="Top">
+                <StackPanel.Style>
+                    <Style TargetType="StackPanel">
+                        <Setter Property="Visibility" Value="Collapsed" />
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding HasExecutionSteps}" Value="False">
+                                <Setter Property="Visibility" Value="Visible" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </StackPanel.Style>
+                <TextBlock Text="还没有执行记录" Style="{StaticResource TextBodyStyle}" />
+                <TextBlock Style="{StaticResource TextPreviewStyle}" Margin="0,8,0,0"
+                           Text="在左边问一句，这里会实时显示 Agent 的每一步：理解 → 规划 → 执行 → 工具 / 知识库检索 → 作答 → 完成。点任意一步可展开看它的参数、结果与耗时。" />
+            </StackPanel>
+
+            <!-- 步骤时间线 -->
+            <ListBox Grid.Row="1" Margin="0,12,0,0" ItemsSource="{Binding ExecutionSteps}"
+                     Style="{StaticResource PlainListBoxStyle}"
+                     ItemContainerStyle="{StaticResource PlainListBoxItemStyle}"
+                     Visibility="{Binding HasExecutionSteps, Converter={StaticResource BoolToVisibility}}">
+                <ListBox.ItemTemplate>
+                    <DataTemplate>
+                        <Grid Margin="8,6">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+
+                            <!-- 序号节点 + 连接线：把步骤串成一条时间线 -->
+                            <StackPanel Grid.Column="0" Width="22">
+                                <Border Style="{StaticResource StepIndexStyle}"
+                                        BorderBrush="{Binding Kind, Converter={StaticResource StepKindToBrush}}">
+                                    <TextBlock Text="{Binding Number}" FontSize="10.5"
+                                               HorizontalAlignment="Center" VerticalAlignment="Center"
+                                               Foreground="{Binding Kind, Converter={StaticResource StepKindToBrush}}" />
+                                </Border>
+                                <Rectangle Style="{StaticResource StepConnectorStyle}" Height="10" />
+                            </StackPanel>
+
+                            <StackPanel Grid.Column="1" Margin="10,0,0,4">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="{Binding KindLabel}" FontSize="11" FontWeight="SemiBold"
+                                               VerticalAlignment="Center"
+                                               Foreground="{Binding Kind, Converter={StaticResource StepKindToBrush}}" />
+                                    <TextBlock Text="{Binding Title}" FontSize="12" Margin="8,0,0,0"
+                                               TextWrapping="Wrap" VerticalAlignment="Center"
+                                               Foreground="{StaticResource TextPrimaryBrush}" />
+                                </StackPanel>
+                                <StackPanel Orientation="Horizontal" Margin="0,3,0,0">
+                                    <TextBlock Text="{Binding StateGlyph}" FontSize="11"
+                                               Foreground="{Binding State, Converter={StaticResource StepStateToBrush}}" />
+                                    <TextBlock Text="{Binding Elapsed}" Style="{StaticResource TextMicroStyle}"
+                                               Margin="6,0,0,0"
+                                               Visibility="{Binding HasElapsed, Converter={StaticResource BoolToVisibility}}" />
+                                </StackPanel>
+
+                                <!-- 展开详情（点这一行才出现）：参数 / 结果 -->
+                                <StackPanel Margin="0,6,0,0">
+                                    <StackPanel.Style>
+                                        <Style TargetType="StackPanel">
+                                            <Setter Property="Visibility" Value="Collapsed" />
+                                            <Style.Triggers>
+                                                <DataTrigger Value="True">
+                                                    <DataTrigger.Binding>
+                                                        <Binding Path="IsSelected"
+                                                                 RelativeSource="{RelativeSource AncestorType=ListBoxItem}" />
+                                                    </DataTrigger.Binding>
+                                                    <Setter Property="Visibility" Value="Visible" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </StackPanel.Style>
+                                    <Border Style="{StaticResource KeyValueBlockStyle}"
+                                            Visibility="{Binding HasArgs, Converter={StaticResource BoolToVisibility}}">
+                                        <StackPanel>
+                                            <TextBlock Text="参数" Style="{StaticResource PanelHeaderStyle}" />
+                                            <TextBlock Text="{Binding Args}" Style="{StaticResource MonoTextStyle}"
+                                                       Margin="0,3,0,0" />
+                                        </StackPanel>
+                                    </Border>
+                                    <Border Style="{StaticResource KeyValueBlockStyle}"
+                                            Visibility="{Binding HasResult, Converter={StaticResource BoolToVisibility}}">
+                                        <StackPanel>
+                                            <TextBlock Text="结果" Style="{StaticResource PanelHeaderStyle}" />
+                                            <TextBlock Text="{Binding Result}" Style="{StaticResource TextPreviewStyle}"
+                                                       Margin="0,3,0,0" />
+                                        </StackPanel>
+                                    </Border>
+                                </StackPanel>
+                            </StackPanel>
+                        </Grid>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+
+            <TextBlock Grid.Row="2" Text="点任意一步可展开它的参数与结果" Style="{StaticResource TextMicroStyle}"
+                       Margin="0,10,0,0"
+                       Visibility="{Binding HasExecutionSteps, Converter={StaticResource BoolToVisibility}}" />
+        </Grid>
+    </Border>
+</UserControl>

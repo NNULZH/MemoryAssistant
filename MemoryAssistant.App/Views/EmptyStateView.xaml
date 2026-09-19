@@ -1,0 +1,23 @@
+<UserControl x:Class="MemoryAssistant.App.Views.EmptyStateView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+             IsHitTestVisible="False">
+    <!-- 统一的"空/加载中"状态：一个图标 + 一句主提示 + 一句怎么继续。
+         以前每页各写各的（有的干脆一片空白），现在一处定义、各处一致。 -->
+    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center"
+                MaxWidth="420" Margin="24,32,24,24">
+        <ui:SymbolIcon x:Name="IconGlyph" Symbol="SearchInfo24" FontSize="26"
+                       HorizontalAlignment="Center"
+                       Foreground="{StaticResource TextTertiaryBrush}" />
+        <TextBlock x:Name="TitleText" Margin="0,12,0,0" HorizontalAlignment="Center"
+                   TextAlignment="Center" TextWrapping="Wrap"
+                   Style="{StaticResource TextBodyStyle}"
+                   Foreground="{StaticResource TextSecondaryBrush}" />
+        <TextBlock x:Name="HintText" Margin="0,6,0,0" HorizontalAlignment="Center"
+                   TextAlignment="Center" TextWrapping="Wrap"
+                   LineHeight="{StaticResource LineMeta}" LineStackingStrategy="BlockLineHeight"
+                   Style="{StaticResource TextMetaStyle}"
+                   Foreground="{StaticResource TextTertiaryBrush}" />
+    </StackPanel>
+</UserControl>

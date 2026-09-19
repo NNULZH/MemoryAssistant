@@ -1,0 +1,287 @@
+<UserControl x:Class="MemoryAssistant.App.Views.ChatView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:MemoryAssistant.App.ViewModels"
+             xmlns:views="clr-namespace:MemoryAssistant.App.Views"
+             d:DataContext="{d:DesignInstance Type=vm:ChatViewModel}"
+             mc:Ignorable="d">
+    <Grid Margin="24,18,24,20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!-- 顶部：这一页是核心工作区（提问 + 派活），右栏同步显示 Agent 执行过程 -->
+        <Grid Grid.Row="0" Margin="0,0,0,14">
+            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                <TextBlock Text="对话" Style="{StaticResource PageHeaderTitleStyle}" />
+                <TextBlock Text="一句话提问，或把长期需求派给我（我先出草案，你确认才创建）"
+                           Style="{StaticResource PageHeaderSubtitleStyle}" Margin="12,4,0,0"
+                           VerticalAlignment="Center" />
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                <CheckBox Content="显示推理细节" IsChecked="{Binding IsTraceEnabled}" VerticalAlignment="Center"
+                          Margin="0,0,12,0"
+                          ToolTip="默认打开：每条回答下面可以展开看模型的推理原文与每一步工具调用。推理原文是模型自己说的话，不是查证过的事实（界面上用斜体+次级色区分）；关掉则只保留可观察的执行步骤。" />
+                <Button Content="新对话" Command="{Binding NewChatCommand}"
+                        Style="{StaticResource SecondaryButtonStyle}" Height="34" Padding="16,0" />
+            </StackPanel>
+        </Grid>
+
+        <!-- 主体：左对话 / 右执行过程（互不抢空间） -->
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" MinWidth="380" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+
+            <Grid Grid.Column="0">
+                <ScrollViewer x:Name="Scroll" VerticalScrollBarVisibility="Auto">
+                    <ItemsControl ItemsSource="{Binding Messages}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <VirtualizingStackPanel IsVirtualizing="True" VirtualizationMode="Recycling" />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <!-- 气泡：自己=品牌底白字；助手=白面；meta=纯文字 -->
+                                <Border Padding="14,10" CornerRadius="14">
+                                    <Border.Style>
+                                        <Style TargetType="Border">
+                                            <Setter Property="Background" Value="Transparent" />
+                                            <Setter Property="HorizontalAlignment" Value="Center" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding Role}" Value="user">
+                                                    <Setter Property="Background" Value="{StaticResource UserBubbleBrush}" />
+                                                    <Setter Property="HorizontalAlignment" Value="Right" />
+                                                    <Setter Property="Margin" Value="80,5,0,5" />
+                                                    <Setter Property="MaxWidth" Value="560" />
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding Role}" Value="assistant">
+                                                    <Setter Property="Background" Value="{StaticResource AssistantBubbleBrush}" />
+                                                    <Setter Property="BorderBrush" Value="{StaticResource BorderBrush}" />
+                                                    <Setter Property="BorderThickness" Value="1" />
+                                                    <Setter Property="HorizontalAlignment" Value="Left" />
+                                                    <Setter Property="Margin" Value="0,5,80,5" />
+                                                    <Setter Property="MaxWidth" Value="640" />
+                                                </DataTrigger>
+                                                <!-- 任务草案卡：占满左侧，卡片自带边框，不要气泡底色 -->
+                                                <DataTrigger Binding="{Binding Role}" Value="mission">
+                                                    <Setter Property="Padding" Value="0" />
+                                                    <Setter Property="HorizontalAlignment" Value="Left" />
+                                                    <Setter Property="Margin" Value="0,5,40,5" />
+                                                    <Setter Property="MaxWidth" Value="640" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Border.Style>
+                                    <StackPanel>
+                                        <!-- 模型思考（流式，先于答案出现）：只显示尾部一段，完整版在下面「推理细节」里。
+                                             保留它是因为"看得见模型在想"是旧版的可观察性之一——不能因为换了皮就丢了。 -->
+                                        <Border Margin="0,0,0,6" Padding="10,8" CornerRadius="8"
+                                                Background="{StaticResource SurfaceSecondaryBrush}"
+                                                Visibility="{Binding Thinking, Converter={StaticResource NullToCollapsedConverter}}">
+                                            <StackPanel>
+                                                <TextBlock Text="模型思考" Style="{StaticResource PanelHeaderStyle}" />
+                                                <TextBlock Text="{Binding Thinking}" Margin="0,4,0,0" TextWrapping="Wrap"
+                                                           FontSize="12" LineHeight="19" FontStyle="Italic"
+                                                           Foreground="{StaticResource TextSecondaryBrush}" />
+                                            </StackPanel>
+                                        </Border>
+
+                                        <!-- 工具调用台账（实时）：到底调了什么工具、给了什么参数、拿到什么结果、成功还是失败。
+                                             与右栏「执行过程」同源（都来自 AgentProgress 事件流），这里贴着消息看更直观。 -->
+                                        <Border Margin="0,0,0,6" Padding="10,8" CornerRadius="8"
+                                                Background="{StaticResource BrandSoftBrush}"
+                                                Visibility="{Binding Tools, Converter={StaticResource NullToCollapsedConverter}}">
+                                            <StackPanel>
+                                                <TextBlock Text="{Binding Tools.Count, StringFormat='工具调用 · {0} 次'}"
+                                                           Style="{StaticResource PanelHeaderStyle}"
+                                                           Foreground="{StaticResource BrandBrush}" />
+                                                <ItemsControl ItemsSource="{Binding Tools}" Margin="0,5,0,0">
+                                                    <ItemsControl.ItemTemplate>
+                                                        <DataTemplate>
+                                                            <Grid Margin="0,2">
+                                                                <Grid.ColumnDefinitions>
+                                                                    <ColumnDefinition Width="Auto" />
+                                                                    <ColumnDefinition Width="*" />
+                                                                </Grid.ColumnDefinitions>
+                                                                <TextBlock Grid.Column="0" Text="{Binding Glyph}"
+                                                                           FontSize="11" Margin="0,1,6,0" VerticalAlignment="Top"
+                                                                           Foreground="{Binding State, Converter={StaticResource ToolStateToBrushConverter}}" />
+                                                                <StackPanel Grid.Column="1">
+                                                                    <TextBlock Text="{Binding Headline}" FontSize="12" TextWrapping="Wrap"
+                                                                               FontWeight="SemiBold"
+                                                                               Foreground="{StaticResource TextPrimaryBrush}" />
+                                                                    <TextBlock Text="{Binding Result}" FontSize="11" TextWrapping="Wrap"
+                                                                               Margin="0,1,0,0"
+                                                                               Foreground="{Binding State, Converter={StaticResource ToolStateToBrushConverter}}"
+                                                                               Visibility="{Binding Result, Converter={StaticResource NullToCollapsedConverter}}" />
+                                                                </StackPanel>
+                                                            </Grid>
+                                                        </DataTemplate>
+                                                    </ItemsControl.ItemTemplate>
+                                                </ItemsControl>
+                                            </StackPanel>
+                                        </Border>
+
+                                        <!-- 流式状态行：跑长任务时告诉用户"现在在干嘛"（有正文后自动消失） -->
+                                        <TextBlock Text="{Binding Status}" Style="{StaticResource TextMetaStyle}"
+                                                   Margin="0,0,0,6" TextWrapping="Wrap"
+                                                   Visibility="{Binding Status, Converter={StaticResource NullToCollapsedConverter}}" />
+                                        <TextBlock Text="{Binding Content}" Style="{StaticResource TextParagraphStyle}"
+                                                   Foreground="{Binding Role, Converter={StaticResource BubbleTextBrushConverter}}" />
+                                        <TextBlock Text="{Binding Meta}" Style="{StaticResource TextMicroStyle}"
+                                                   Margin="0,6,0,0"
+                                                   Visibility="{Binding Meta, Converter={StaticResource NullToCollapsedConverter}}"
+                                                   Foreground="{Binding Role, Converter={StaticResource BubbleTextBrushConverter}}" />
+
+                                        <!-- 任务确认卡（一句话需求 → 可执行任务，人工点头才创建） -->
+                                        <Border Margin="0,10,0,0" Padding="16" CornerRadius="12"
+                                                Background="{StaticResource SurfaceBrush}"
+                                                BorderBrush="{StaticResource BrandBrush}" BorderThickness="1"
+                                                Visibility="{Binding MissionDraft, Converter={StaticResource NullToCollapsedConverter}}">
+                                            <StackPanel>
+                                                <TextBlock Text="任务草案 · 确认后创建" Style="{StaticResource PanelHeaderStyle}"
+                                                           Foreground="{StaticResource BrandBrush}" />
+                                                <TextBlock Text="{Binding MissionDraft.Title}" FontSize="15" FontWeight="SemiBold"
+                                                           TextWrapping="Wrap" Margin="0,8,0,0"
+                                                           Foreground="{StaticResource TextPrimaryBrush}" />
+                                                <TextBlock Margin="0,8,0,0" Style="{StaticResource TextMetaStyle}">
+                                                    <Run Text="触发方式：" />
+                                                    <Run Text="{Binding MissionDraft.TriggerText, Mode=OneWay}" />
+                                                </TextBlock>
+                                                <TextBlock Margin="0,4,0,0" Style="{StaticResource TextMetaStyle}" TextWrapping="Wrap">
+                                                    <Run Text="任务目标：" />
+                                                    <Run Text="{Binding MissionDraft.Goal, Mode=OneWay}" />
+                                                </TextBlock>
+                                                <TextBlock Text="{Binding MissionDraft.Reason}" Style="{StaticResource TextMicroStyle}"
+                                                           Margin="0,6,0,0" TextWrapping="Wrap" />
+                                                <StackPanel Orientation="Horizontal" Margin="0,14,0,0">
+                                                    <Button Content="创建任务" Height="34" Padding="18,0"
+                                                            Style="{StaticResource AccentButtonStyle}"
+                                                            Command="{Binding DataContext.ConfirmMissionCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" />
+                                                    <Button Content="取消" Height="34" Padding="18,0" Margin="8,0,0,0"
+                                                            Style="{StaticResource SecondaryButtonStyle}"
+                                                            Command="{Binding DataContext.CancelMissionCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" />
+                                                </StackPanel>
+                                            </StackPanel>
+                                        </Border>
+
+                                        <!-- 证据（点一下跳到那段聊天并定位到该条） -->
+                                        <ItemsControl ItemsSource="{Binding EvidenceItems}"
+                                                      Visibility="{Binding EvidenceItems, Converter={StaticResource NullToCollapsedConverter}}"
+                                                      Margin="0,10,0,0">
+                                            <ItemsControl.ItemsPanel>
+                                                <ItemsPanelTemplate>
+                                                    <WrapPanel />
+                                                </ItemsPanelTemplate>
+                                            </ItemsControl.ItemsPanel>
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate>
+                                                    <Button Style="{StaticResource EvidenceButtonStyle}" Click="Evidence_Click">
+                                                        <StackPanel Orientation="Horizontal">
+                                                            <TextBlock Text="{Binding Index, StringFormat=[{0}]}" FontWeight="SemiBold" Margin="0,0,6,0" />
+                                                            <TextBlock Text="{Binding Time}" />
+                                                            <TextBlock Text="{Binding SessionName}" Margin="8,0,0,0" />
+                                                        </StackPanel>
+                                                    </Button>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+
+                                        <!-- 推理细节（默认不展示；由顶部开关控制，§12） -->
+                                        <Expander Header="推理细节（模型原文）" Margin="0,10,0,0"
+                                                  Style="{StaticResource FluentExpanderStyle}"
+                                                  Visibility="{Binding TraceSteps, Converter={StaticResource NullToCollapsedConverter}}">
+                                            <ItemsControl ItemsSource="{Binding TraceSteps}" Margin="0,4,0,0">
+                                                <ItemsControl.ItemTemplate>
+                                                    <DataTemplate>
+                                                        <TextBlock Text="{Binding Text}" TextWrapping="Wrap" FontSize="11"
+                                                                   Foreground="{Binding Level, Converter={StaticResource TraceLevelToBrushConverter}}"
+                                                                   Margin="0,2">
+                                                            <TextBlock.Style>
+                                                                <Style TargetType="TextBlock">
+                                                                    <Style.Triggers>
+                                                                        <DataTrigger Binding="{Binding Category}" Value="think">
+                                                                            <Setter Property="FontStyle" Value="Italic" />
+                                                                            <Setter Property="Opacity" Value="0.8" />
+                                                                        </DataTrigger>
+                                                                        <DataTrigger Binding="{Binding Category}" Value="plan">
+                                                                            <Setter Property="FontStyle" Value="Italic" />
+                                                                            <Setter Property="Opacity" Value="0.8" />
+                                                                        </DataTrigger>
+                                                                    </Style.Triggers>
+                                                                </Style>
+                                                            </TextBlock.Style>
+                                                        </TextBlock>
+                                                    </DataTemplate>
+                                                </ItemsControl.ItemTemplate>
+                                            </ItemsControl>
+                                        </Expander>
+                                    </StackPanel>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+
+                <!-- 空状态：告诉用户"能问什么 / 能派什么活"，点一下就能开始 -->
+                <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" MaxWidth="660"
+                            Visibility="{Binding IsChatEmpty, Converter={StaticResource BoolToVisibility}}">
+                    <TextBlock Text="问点什么，或者直接派活" Style="{StaticResource TextTitleStyle}"
+                               HorizontalAlignment="Center" />
+                    <TextBlock Margin="0,14,0,0" Style="{StaticResource TextParagraphStyle}"
+                               TextAlignment="Center" Foreground="{StaticResource TextSecondaryBrush}"
+                               Text="查一段聊天、找没做完的承诺、看最近都在聊什么 —— 直接问就好。&#x0a;也可以把长期需求交给我，例如「帮我追踪和某人的聊天，有新消息就总结给我」：我会先给出任务草案，你确认后才创建。" />
+                    <ItemsControl ItemsSource="{Binding Suggestions}" Margin="0,22,0,0" HorizontalAlignment="Center">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <WrapPanel HorizontalAlignment="Center" MaxWidth="640" />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Button Content="{Binding}" Margin="5" Height="34" Padding="14,0"
+                                        Style="{StaticResource SecondaryButtonStyle}"
+                                        Command="{Binding DataContext.UseSuggestionCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                        CommandParameter="{Binding}" />
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </Grid>
+
+            <!-- 右：Agent 执行过程（课程展示核心） -->
+            <views:ChatExecutionPanel Grid.Column="1" Width="340" Margin="16,0,0,0" />
+        </Grid>
+
+        <!-- 输入区：白底圆角容器 + 主按钮 -->
+        <Border Grid.Row="2" Margin="0,16,0,0" Padding="8" CornerRadius="14"
+                Background="{StaticResource SurfaceBrush}"
+                BorderBrush="{StaticResource BorderStrongBrush}" BorderThickness="1">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <TextBox Grid.Column="0" x:Name="Input"
+                         Text="{Binding InputText, UpdateSourceTrigger=PropertyChanged}"
+                         Style="{StaticResource InputTextBoxStyle}"
+                         Background="Transparent" BorderThickness="0"
+                         AcceptsReturn="True" TextWrapping="Wrap" MinHeight="40" MaxHeight="140"
+                         VerticalScrollBarVisibility="Auto"
+                         KeyDown="Input_KeyDown" />
+                <Button Grid.Column="1" Content="发送" Command="{Binding SendCommand}"
+                        Margin="8,0,0,0" VerticalAlignment="Bottom"
+                        Style="{StaticResource AccentButtonStyle}"
+                        IsEnabled="{Binding IsBusy, Converter={StaticResource InverseBoolConverter}}"
+                        Width="88" Height="40" />
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>

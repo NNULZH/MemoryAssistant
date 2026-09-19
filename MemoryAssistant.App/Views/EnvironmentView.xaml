@@ -1,0 +1,199 @@
+<UserControl x:Class="MemoryAssistant.App.Views.EnvironmentView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:MemoryAssistant.App.ViewModels"
+             d:DataContext="{d:DesignInstance Type=vm:EnvironmentViewModel}"
+             mc:Ignorable="d">
+    <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="24">
+        <StackPanel MaxWidth="1180" HorizontalAlignment="Left">
+
+            <!-- 页头 -->
+            <StackPanel Margin="0,0,0,16">
+                <TextBlock Text="环境" Style="{StaticResource PageHeaderTitleStyle}" />
+                <TextBlock Margin="0,6,0,0" Style="{StaticResource PageHeaderSubtitleStyle}"
+                           Text="Agent 知道自己身处什么软件：当前在哪一页、有哪些能力、多少个任务在跑、各个子系统是否正常。这里看到的和它自己查到的（get_environment_context）是同一份数据。" />
+            </StackPanel>
+
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="360" />
+                </Grid.ColumnDefinitions>
+
+                <!-- 左栏 -->
+                <StackPanel Grid.Column="0" Margin="0,0,16,0">
+
+                    <!-- 身份 -->
+                    <Border Style="{StaticResource CardBorderStyle}" Padding="20">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <Border Width="44" Height="44" CornerRadius="12" BorderThickness="1"
+                                    BorderBrush="{StaticResource BrandRingBrush}" ClipToBounds="True"
+                                    VerticalAlignment="Top">
+                                <Image Source="/Assets/AppIcon.png" Stretch="UniformToFill" />
+                            </Border>
+                            <StackPanel Grid.Column="1" Margin="14,0,0,0">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="{Binding AgentName}" Style="{StaticResource TextTitleStyle}" />
+                                    <Border Style="{StaticResource StatusDotStyle}" Margin="10,0,0,0"
+                                            Background="{Binding AgentState, Converter={StaticResource StepStateToBrush}}" />
+                                    <TextBlock Text="{Binding AgentStatus}" Style="{StaticResource TextMetaStyle}"
+                                               Margin="6,0,0,0" VerticalAlignment="Center" />
+                                </StackPanel>
+                                <TextBlock Style="{StaticResource TextMicroStyle}" Margin="0,6,0,0">
+                                    <Run Text="版本 " />
+                                    <Run Text="{Binding Version, Mode=OneWay}" />
+                                    <Run Text="　当前页面：" />
+                                    <Run Text="{Binding CurrentPage, Mode=OneWay}" />
+                                </TextBlock>
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+
+                    <!-- 能力模型 -->
+                    <Border Style="{StaticResource CardBorderStyle}" Padding="20">
+                        <StackPanel>
+                            <TextBlock Text="能力模型" Style="{StaticResource TextSectionStyle}" />
+                            <TextBlock Style="{StaticResource TextMicroStyle}" Margin="0,4,0,0"
+                                       Text="Agent 自己报能力和这一页显示的是同一份目录（Tools / Skills / Workflows / Missions）。" />
+                            <ItemsControl ItemsSource="{Binding Capabilities}" Margin="0,12,0,0">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Grid Margin="0,0,0,10">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="120" />
+                                                <ColumnDefinition Width="72" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Grid.Column="0" Text="{Binding Name}" FontSize="13"
+                                                       FontWeight="SemiBold"
+                                                       Foreground="{StaticResource TextPrimaryBrush}" />
+                                            <TextBlock Grid.Column="1" Text="{Binding Count}" FontSize="14"
+                                                       FontWeight="SemiBold"
+                                                       Foreground="{StaticResource BrandBrush}" />
+                                            <TextBlock Grid.Column="2" Text="{Binding Detail}"
+                                                       Style="{StaticResource TextPreviewStyle}" />
+                                        </Grid>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- 自检 -->
+                    <Border Style="{StaticResource CardBorderStyle}" Padding="20">
+                        <StackPanel>
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="系统自检" Style="{StaticResource TextSectionStyle}" />
+                                <Button Content="运行自检" Command="{Binding RunSelfCheckCommand}"
+                                        Style="{StaticResource AccentButtonStyle}"
+                                        Height="34" Padding="16,0" Margin="16,0,0,0"
+                                        IsEnabled="{Binding IsChecking, Converter={StaticResource InverseBoolConverter}}" />
+                            </StackPanel>
+                            <TextBlock Text="{Binding CheckSummary}" Style="{StaticResource TextMetaStyle}" Margin="0,10,0,0" TextWrapping="Wrap" />
+                            <ItemsControl ItemsSource="{Binding Checks}" Margin="0,12,0,0">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Grid Margin="0,0,0,8">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="24" />
+                                                <ColumnDefinition Width="150" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Grid.Column="0" FontSize="13" FontWeight="Bold">
+                                                <TextBlock.Style>
+                                                    <Style TargetType="TextBlock">
+                                                        <Setter Property="Text" Value="✗" />
+                                                        <Setter Property="Foreground" Value="{StaticResource DangerBrush}" />
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding Ok}" Value="True">
+                                                                <Setter Property="Text" Value="✓" />
+                                                                <Setter Property="Foreground" Value="{StaticResource SuccessBrush}" />
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </TextBlock.Style>
+                                            </TextBlock>
+                                            <TextBlock Grid.Column="1" Text="{Binding Name}" FontSize="13"
+                                                       Foreground="{StaticResource TextPrimaryBrush}" />
+                                            <TextBlock Grid.Column="2" Text="{Binding Detail}"
+                                                       Style="{StaticResource TextPreviewStyle}" />
+                                        </Grid>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+
+                <!-- 右栏 -->
+                <StackPanel Grid.Column="1">
+
+                    <!-- 子系统状态 -->
+                    <Border Style="{StaticResource CardBorderStyle}" Padding="20">
+                        <StackPanel>
+                            <TextBlock Text="外部依赖" Style="{StaticResource TextSectionStyle}" />
+                            <StackPanel Margin="0,12,0,0">
+                                <TextBlock Style="{StaticResource FieldLabelStyle}" Text="模型" />
+                                <TextBlock Text="{Binding LlmModel}" Style="{StaticResource TextPreviewStyle}" Margin="0,2,0,10" />
+                                <TextBlock Style="{StaticResource FieldLabelStyle}" Text="知识库" />
+                                <TextBlock Text="{Binding KnowledgeStatus}" Style="{StaticResource TextPreviewStyle}" Margin="0,2,0,10" />
+                                <TextBlock Style="{StaticResource FieldLabelStyle}" Text="微信" />
+                                <TextBlock Text="{Binding WeChatStatus}" Style="{StaticResource TextPreviewStyle}" Margin="0,2,0,10" />
+                                <TextBlock Style="{StaticResource FieldLabelStyle}" Text="任务调度器" />
+                                <TextBlock Text="{Binding SchedulerStatus}" Style="{StaticResource TextPreviewStyle}" Margin="0,2,0,0" />
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- 动作风险分级 -->
+                    <Border Style="{StaticResource CardBorderStyle}" Padding="20">
+                        <StackPanel>
+                            <TextBlock Text="动作风险分级" Style="{StaticResource TextSectionStyle}" />
+                            <ItemsControl ItemsSource="{Binding RiskRules}" Margin="0,12,0,0">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <StackPanel Margin="0,0,0,10">
+                                            <StackPanel Orientation="Horizontal">
+                                                <TextBlock Text="{Binding Name}" FontSize="12.5"
+                                                           Foreground="{StaticResource TextPrimaryBrush}" />
+                                                <Border Style="{StaticResource TagNeutralStyle}" Margin="8,0,0,0">
+                                                    <TextBlock Text="{Binding Count}" FontSize="10.5"
+                                                               Foreground="{StaticResource TextSecondaryBrush}" />
+                                                </Border>
+                                            </StackPanel>
+                                            <TextBlock Text="{Binding Detail}" Style="{StaticResource TextPreviewStyle}" Margin="0,2,0,0" />
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- 写操作工具清单 -->
+                    <Border Style="{StaticResource CardBorderStyle}" Padding="20">
+                        <StackPanel>
+                            <TextBlock Text="会改状态的动作（都要人确认）" Style="{StaticResource TextSectionStyle}" />
+                            <ItemsControl ItemsSource="{Binding WriteTools}" Margin="0,10,0,0">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <StackPanel Margin="0,0,0,8">
+                                            <TextBlock Text="{Binding Name}" FontSize="12.5" FontWeight="SemiBold"
+                                                       Foreground="{StaticResource DangerBrush}" />
+                                            <TextBlock Text="{Binding Description}" Style="{StaticResource TextPreviewStyle}" Margin="0,2,0,0" />
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </Grid>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

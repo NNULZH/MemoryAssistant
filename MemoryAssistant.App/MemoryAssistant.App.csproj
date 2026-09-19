@@ -1,0 +1,44 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\MemoryAssistant.Core\MemoryAssistant.Core.csproj" />
+    <ProjectReference Include="..\MemoryAssistant.Infrastructure\MemoryAssistant.Infrastructure.csproj" />
+    <ProjectReference Include="..\MemoryAssistant.Features\MemoryAssistant.Features.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- 开了 UseWindowsForms 后 SDK 会加 System.Windows.Forms / System.Drawing 的隐式 using，
+         那会让 Application / MessageBox / Brush / Color 这些名字全站撞名。
+         托盘只用到 NotifyIcon 一个类型（代码里全名限定），所以把这两个隐式 using 摘掉。 -->
+    <Using Remove="System.Windows.Forms" />
+    <Using Remove="System.Drawing" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="appsettings.json" CopyToOutputDirectory="PreserveNewest" />
+    <None Update="appsettings.local.json" CopyToOutputDirectory="PreserveNewest" />
+    <!-- 应用图标：Assets/AppIcon.png 由 icon/AppIcon.png 拷入；.ico 是多尺寸版，给 exe/任务栏用 -->
+    <Resource Include="Assets\AppIcon.png" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
+    <PackageReference Include="WPF-UI" Version="4.1.0" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <!-- 带 Windows 版本的目标框架：启用 WinRT 投影（Windows.Media.Ocr 窗口 OCR 只读通道） -->
+    <TargetFramework>net10.0-windows10.0.19041.0</TargetFramework>
+    <SupportedOSPlatformVersion>10.0.19041.0</SupportedOSPlatformVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UseWPF>true</UseWPF>
+    <!-- 托盘图标用内置的 System.Windows.Forms.NotifyIcon（WPF-UI 4.x 没有托盘控件）。
+         只用它这一个类型，代码里一律全名限定，避免与 System.Windows.* 撞名。 -->
+    <UseWindowsForms>true</UseWindowsForms>
+    <!-- exe/任务栏图标（多尺寸 .ico；窗口内图标另由 MainWindow.Icon 指到 PNG） -->
+    <ApplicationIcon>Assets\AppIcon.ico</ApplicationIcon>
+  </PropertyGroup>
+
+</Project>

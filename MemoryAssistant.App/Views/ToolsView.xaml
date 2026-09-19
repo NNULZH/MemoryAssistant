@@ -1,0 +1,177 @@
+<UserControl x:Class="MemoryAssistant.App.Views.ToolsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:MemoryAssistant.App.ViewModels"
+             d:DataContext="{d:DesignInstance Type=vm:ToolsViewModel}"
+             mc:Ignorable="d">
+    <Grid Margin="24,18,24,20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="2,0,0,10">
+            <TextBlock Text="工具" Style="{StaticResource TextTitleStyle}" />
+            <TextBlock Text="Agent 当前可以调用的工具（注册表实时内容，含外部清单热注册进来的）"
+                       Style="{StaticResource TextMetaStyle}" Margin="12,3,0,0" VerticalAlignment="Center" />
+        </StackPanel>
+
+        <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="2,0,0,8">
+            <TextBlock Text="{Binding CountSummary}" Style="{StaticResource TextMetaStyle}" VerticalAlignment="Center" />
+            <Button Content="刷新清单" Command="{Binding RefreshCommand}"
+                    Style="{StaticResource GhostButtonStyle}" Height="28" Padding="12,0" Margin="12,0,0,0" />
+        </StackPanel>
+
+        <Grid Grid.Row="2">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="330" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="300" />
+            </Grid.ColumnDefinitions>
+
+            <!-- 左：工具清单 -->
+            <Border Grid.Column="0" Style="{StaticResource CardBorderStyle}">
+                <Grid Margin="12">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+                    <TextBlock Grid.Row="0" Text="工具清单" Style="{StaticResource TextSectionStyle}" Margin="2,0,0,8" />
+                    <ListBox Grid.Row="1" ItemsSource="{Binding Tools}" SelectedItem="{Binding SelectedTool}"
+                             Background="Transparent" BorderThickness="0"
+                             ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <Border Margin="0,2" Padding="10" CornerRadius="{StaticResource CardRadius}"
+                                        Background="{StaticResource CardBgBrush}"
+                                        BorderBrush="{StaticResource CardBorderBrush}" BorderThickness="1">
+                                    <StackPanel>
+                                        <TextBlock Text="{Binding Name}" FontWeight="SemiBold" FontSize="13"
+                                                   Foreground="{StaticResource TextPrimaryBrush}" TextWrapping="Wrap" />
+                                        <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
+                                            <TextBlock Text="{Binding Category}" FontSize="11"
+                                                       Foreground="{StaticResource SkyBrush}" />
+                                            <TextBlock Text=" · " FontSize="11" Foreground="{StaticResource TextSecondaryBrush}" />
+                                            <TextBlock Text="{Binding ReadOnlyText}" FontSize="11"
+                                                       Foreground="{StaticResource MintBrush}" />
+                                            <TextBlock Text=" · " FontSize="11" Foreground="{StaticResource TextSecondaryBrush}" />
+                                            <TextBlock Text="{Binding ParamSummary}" FontSize="11"
+                                                       Foreground="{StaticResource TextSecondaryBrush}" />
+                                        </StackPanel>
+                                    </StackPanel>
+                                </Border>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                </Grid>
+            </Border>
+
+            <!-- 中：工具详情（参数声明 + 最近调用） -->
+            <Border Grid.Column="1" Style="{StaticResource CardBorderStyle}" Margin="16,0,16,0">
+                <Grid Margin="14">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+
+                    <StackPanel Grid.Row="0">
+                        <TextBlock Text="{Binding SelectedTool.Name, FallbackValue=选择一个工具查看详情}"
+                                   Style="{StaticResource TextSectionStyle}" TextWrapping="Wrap" />
+                        <TextBlock Text="{Binding SelectedTool.Description}" Style="{StaticResource TextParagraphStyle}"
+                                   Margin="0,8,0,0" Foreground="{StaticResource TextSecondaryBrush}" />
+                        <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
+                            <TextBlock Text="分类：" Style="{StaticResource TextMetaStyle}" />
+                            <TextBlock Text="{Binding SelectedTool.Category}" Style="{StaticResource TextMetaStyle}"
+                                       Foreground="{StaticResource TextPrimaryBrush}" />
+                            <TextBlock Text="   权限：" Style="{StaticResource TextMetaStyle}" />
+                            <TextBlock Text="{Binding SelectedTool.ReadOnlyText}" Style="{StaticResource TextMetaStyle}"
+                                       Foreground="{StaticResource MintBrush}" />
+                        </StackPanel>
+                        <TextBlock Text="{Binding SelectedLastCallText}" Style="{StaticResource TextMicroStyle}"
+                                   Margin="0,8,0,0" TextWrapping="Wrap" />
+                    </StackPanel>
+
+                    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Margin="0,14,0,0">
+                        <StackPanel>
+                            <TextBlock Text="参数声明（Agent 就是按这份 schema 填参数的）"
+                                       Style="{StaticResource PanelHeaderStyle}" />
+                            <ItemsControl ItemsSource="{Binding SelectedTool.Parameters}" Margin="0,6,0,0">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border Style="{StaticResource KeyValueBlockStyle}">
+                                            <StackPanel>
+                                                <StackPanel Orientation="Horizontal">
+                                                    <TextBlock Text="{Binding Name}" FontSize="12" FontWeight="SemiBold"
+                                                               Foreground="{StaticResource TextPrimaryBrush}" />
+                                                    <TextBlock Text="{Binding Type}" FontSize="11" Margin="8,0,0,0"
+                                                               Foreground="{StaticResource SkyBrush}" />
+                                                    <TextBlock Text="{Binding RequiredText}" FontSize="11" Margin="8,0,0,0"
+                                                               Foreground="{StaticResource TagAmberBrush}" />
+                                                </StackPanel>
+                                                <TextBlock Text="{Binding Description}" Style="{StaticResource TextPreviewStyle}"
+                                                           Margin="0,3,0,0" />
+                                            </StackPanel>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                            <TextBlock Text="（这个工具没有参数）" Margin="0,6,0,0">
+                                <TextBlock.Style>
+                                    <Style TargetType="TextBlock" BasedOn="{StaticResource TextMicroStyle}">
+                                        <Setter Property="Visibility" Value="Collapsed" />
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding SelectedTool.ParamSummary}" Value="无参数">
+                                                <Setter Property="Visibility" Value="Visible" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBlock.Style>
+                            </TextBlock>
+                        </StackPanel>
+                    </ScrollViewer>
+                </Grid>
+            </Border>
+
+            <!-- 右：最近调用记录（证明工具不只是清单上的名字） -->
+            <Border Grid.Column="2" Style="{StaticResource CardBorderStyle}">
+                <Grid Margin="12">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+                    <StackPanel Grid.Row="0">
+                        <TextBlock Text="最近调用" Style="{StaticResource TextSectionStyle}" />
+                        <TextBlock Text="{Binding TotalCallText}" Style="{StaticResource TextMicroStyle}"
+                                   Margin="0,4,0,0" TextWrapping="Wrap" />
+                    </StackPanel>
+                    <ListBox Grid.Row="1" ItemsSource="{Binding RecentCalls}" Margin="0,8,0,0"
+                             Background="Transparent" BorderThickness="0"
+                             ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <StackPanel Margin="0,3">
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="{Binding StateGlyph}" FontSize="11"
+                                                   Foreground="{Binding State, Converter={StaticResource ToolStateToBrushConverter}}" />
+                                        <TextBlock Text="{Binding Name}" FontSize="12" FontWeight="SemiBold" Margin="6,0,0,0"
+                                                   Foreground="{StaticResource TextPrimaryBrush}" />
+                                        <TextBlock Text="{Binding TimeText}" FontSize="11" Margin="8,0,0,0"
+                                                   Foreground="{StaticResource TextTertiaryBrush}" />
+                                        <TextBlock Text="{Binding ElapsedText}" FontSize="11" Margin="8,0,0,0"
+                                                   Foreground="{StaticResource TextTertiaryBrush}" />
+                                    </StackPanel>
+                                    <TextBlock Text="{Binding Headline}" Style="{StaticResource MonoTextStyle}" Margin="0,2,0,0" />
+                                    <TextBlock Text="{Binding Result}" Style="{StaticResource TextPreviewStyle}" Margin="0,2,0,0"
+                                               Visibility="{Binding Result, Converter={StaticResource NullToCollapsedConverter}}" />
+                                </StackPanel>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                </Grid>
+            </Border>
+        </Grid>
+    </Grid>
+</UserControl>

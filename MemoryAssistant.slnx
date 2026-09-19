@@ -1,0 +1,7 @@
+<Solution>
+  <Project Path="MemoryAssistant.App/MemoryAssistant.App.csproj" />
+  <Project Path="MemoryAssistant.Core/MemoryAssistant.Core.csproj" />
+  <Project Path="MemoryAssistant.Features/MemoryAssistant.Features.csproj" />
+  <Project Path="MemoryAssistant.Infrastructure/MemoryAssistant.Infrastructure.csproj" />
+  <Project Path="MemoryAssistant.Tests/MemoryAssistant.Tests.csproj" />
+</Solution>

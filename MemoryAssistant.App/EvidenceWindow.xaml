@@ -1,0 +1,67 @@
+<Window x:Class="MemoryAssistant.App.EvidenceWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+        Title="证据原文"
+        WindowStyle="None"
+        AllowsTransparency="True"
+        Background="Transparent"
+        WindowState="Maximized"
+        Topmost="True"
+        ShowInTaskbar="False"
+        WindowStartupLocation="CenterScreen">
+    <Grid Background="{StaticResource OverlayBrush}" MouseLeftButtonDown="Overlay_Click">
+        <Border x:Name="DialogCard"
+                Width="640" MaxHeight="520"
+                HorizontalAlignment="Center" VerticalAlignment="Center"
+                Background="{StaticResource CardBgBrush}"
+                BorderBrush="{StaticResource CardBorderBrush}"
+                BorderThickness="1"
+                CornerRadius="12"
+                Padding="20"
+                MouseLeftButtonDown="Card_Click"
+                Opacity="0"
+                RenderTransformOrigin="0.5,0.5">
+            <Border.RenderTransform>
+                <TranslateTransform Y="16" />
+            </Border.RenderTransform>
+            <Border.Effect>
+                <DropShadowEffect BlurRadius="20" Direction="270" Opacity="0.5" ShadowDepth="6" Color="#000000" />
+            </Border.Effect>
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+
+                <!-- 标题 -->
+                <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,12">
+                    <TextBlock x:Name="IndexText" FontSize="18" FontWeight="Bold"
+                               Foreground="{StaticResource AccentBrush}" Margin="0,0,8,0" />
+                    <TextBlock x:Name="SessionText" FontSize="16" FontWeight="SemiBold"
+                               Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center"
+                               TextTrimming="CharacterEllipsis" MaxWidth="520" />
+                </StackPanel>
+
+                <!-- 元信息 -->
+                <TextBlock x:Name="MetaText" Grid.Row="1" Foreground="{StaticResource TextSecondaryBrush}"
+                           Margin="0,0,0,12" TextWrapping="Wrap" />
+
+                <Rectangle Grid.Row="1" Height="1" Fill="{StaticResource CardBorderBrush}"
+                           VerticalAlignment="Bottom" Margin="0,0,0,0" />
+
+                <!-- 内容 -->
+                <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto" Margin="0,12,0,12">
+                    <TextBlock x:Name="ContentText" TextWrapping="Wrap" FontSize="13"
+                               Foreground="{StaticResource TextPrimaryBrush}" />
+                </ScrollViewer>
+
+                <!-- 关闭按钮 -->
+                <Button Grid.Row="3" Content="关闭" HorizontalAlignment="Right"
+                        Style="{StaticResource AccentButtonStyle}" Click="Close_Click" />
+            </Grid>
+        </Border>
+    </Grid>
+</Window>

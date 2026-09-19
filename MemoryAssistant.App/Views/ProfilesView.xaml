@@ -1,0 +1,115 @@
+<UserControl x:Class="MemoryAssistant.App.Views.ProfilesView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:MemoryAssistant.App.ViewModels"
+             xmlns:views="clr-namespace:MemoryAssistant.App.Views"
+             d:DataContext="{d:DesignInstance Type=vm:ProfilesViewModel}"
+             mc:Ignorable="d"
+             Loaded="OnLoaded">
+    <Grid Margin="{StaticResource PagePadding}">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <!-- V4.1：切页不再无条件重拉，所以这里必须留一个手动刷新入口 + 说明当前间隔 -->
+        <Grid Grid.Row="0" Margin="0,0,0,12">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <StackPanel Grid.Column="0">
+                <TextBlock Text="{Binding StatusText}" Style="{StaticResource TextMetaStyle}" />
+                <TextBlock Text="{Binding Refresh.Hint}" Style="{StaticResource TextMetaStyle}"
+                           FontSize="11" Opacity="0.7" />
+            </StackPanel>
+            <Button Grid.Column="1" Content="刷新" Command="{Binding LoadCommand}"
+                    Style="{StaticResource GhostButtonStyle}" VerticalAlignment="Center"
+                    IsEnabled="{Binding IsBusy, Converter={StaticResource InverseBoolConverter}}" />
+        </Grid>
+
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="320" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <!-- 会话列表 + 过滤 -->
+            <Grid Grid.Column="0">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+                <TextBox Grid.Row="0" Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
+                         Margin="0,0,0,8" ToolTip="按会话名过滤" />
+                <ListBox Grid.Row="1" ItemsSource="{Binding FilteredProfiles}"
+                         SelectedItem="{Binding SelectedProfile}"
+                         VirtualizingStackPanel.IsVirtualizing="True"
+                         VirtualizingStackPanel.VirtualizationMode="Recycling">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding Display}" Style="{StaticResource TextBodyStyle}" />
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </Grid>
+
+            <!-- 详情 -->
+            <ScrollViewer Grid.Column="1" Margin="16,0,0,0" VerticalScrollBarVisibility="Auto">
+                <StackPanel>
+                    <TextBlock Text="{Binding DetailSummary}" Style="{StaticResource TextParagraphStyle}"
+                               Visibility="{Binding DetailSummary, Converter={StaticResource NullToCollapsedConverter}}" />
+                    <TextBlock Text="活跃时段（样本：最近 200 条）" FontWeight="SemiBold" Margin="0,12,0,6"
+                               Style="{StaticResource TextBodyStyle}" />
+                    <TextBlock Text="{Binding ActiveHoursText}" Style="{StaticResource TextMetaStyle}"
+                               Visibility="{Binding ActiveHoursText, Converter={StaticResource NullToCollapsedConverter}}" />
+                    <TextBlock Text="高频主题" FontWeight="SemiBold" Margin="0,12,0,6"
+                               Style="{StaticResource TextBodyStyle}" />
+                    <ItemsControl ItemsSource="{Binding DetailTopics}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Style="{StaticResource TextMetaStyle}">
+                                    <Run Text="{Binding Category, Mode=OneWay}" /> · <Run Text="{Binding Total, Mode=OneWay}" /> 次
+                                </TextBlock>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                    <TextBlock Text="最近消息" FontWeight="SemiBold" Margin="0,12,0,6"
+                               Style="{StaticResource TextBodyStyle}" />
+                    <ItemsControl ItemsSource="{Binding RecentMessages}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border Style="{StaticResource CardBorderStyle}" Padding="12" Cursor="Hand"
+                                        ToolTip="点一下：看这条消息所在的完整对话"
+                                        MouseLeftButtonUp="Recent_Click">
+                                    <StackPanel>
+                                        <TextBlock Style="{StaticResource TextMicroStyle}">
+                                            <Run Text="{Binding Time, Mode=OneWay}" /> · <Run Text="{Binding Sender, Mode=OneWay}" />
+                                        </TextBlock>
+                                        <TextBlock Text="{Binding Content}" Margin="0,4,0,0"
+                                                   Style="{StaticResource TextParagraphStyle}" />
+                                    </StackPanel>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </ScrollViewer>
+
+            <!-- 空状态 -->
+            <views:EmptyStateView Grid.Column="0" Grid.ColumnSpan="2"
+                                  Icon="Person24"
+                                  Title="还没有会话画像"
+                                  Hint="画像按会话统计索引里的消息量与活跃时段；索引建好后这里就有内容。">
+                <views:EmptyStateView.Visibility>
+                    <MultiBinding Converter="{StaticResource EmptyStateVisibility}">
+                        <Binding Path="Profiles" />
+                        <Binding Path="IsBusy" />
+                    </MultiBinding>
+                </views:EmptyStateView.Visibility>
+            </views:EmptyStateView>
+        </Grid>
+    </Grid>
+</UserControl>

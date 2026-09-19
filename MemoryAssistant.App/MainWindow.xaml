@@ -1,0 +1,142 @@
+<ui:FluentWindow x:Class="MemoryAssistant.App.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+        xmlns:views="clr-namespace:MemoryAssistant.App.Views"
+        mc:Ignorable="d"
+        Title="Memory Assistant" Height="860" Width="1360"
+        MinHeight="640" MinWidth="1080"
+        Icon="/Assets/AppIcon.png"
+        WindowStartupLocation="CenterScreen"
+        ExtendsContentIntoTitleBar="True"
+        WindowBackdropType="Mica"
+        WindowCornerPreference="Round">
+    <!--
+        导航按"用户任务"分组，而不是按数据库结构排：
+          · 顶层三个高频入口：首页 / 对话 / 任务
+          · 「知识」= 我的聊天记忆（知识库、时间线、话题、画像）
+          · 「智能体」= 它自己是怎么工作的（工作流、工具、环境）
+        设置留在底部。
+    -->
+    <Grid>
+        <ui:NavigationView x:Name="RootNavigation"
+                           Padding="0"
+                           IsBackButtonVisible="Collapsed"
+                           IsPaneToggleVisible="True"
+                           PaneDisplayMode="Left"
+                           OpenPaneLength="228">
+            <ui:NavigationView.PaneHeader>
+                <StackPanel Orientation="Horizontal" Margin="4,0" VerticalAlignment="Center">
+                    <Border Width="28" Height="28" CornerRadius="8" BorderThickness="1"
+                            BorderBrush="{StaticResource BrandRingBrush}" ClipToBounds="True">
+                        <Image Source="/Assets/AppIcon.png" Stretch="UniformToFill" />
+                    </Border>
+                    <StackPanel Margin="10,0,0,0" VerticalAlignment="Center">
+                        <TextBlock Text="Memory Assistant" FontSize="13" FontWeight="SemiBold"
+                                   Foreground="{StaticResource TextPrimaryBrush}" />
+                        <TextBlock Text="个人智能体" FontSize="10"
+                                   Foreground="{StaticResource TextMutedBrush}" />
+                    </StackPanel>
+                </StackPanel>
+            </ui:NavigationView.PaneHeader>
+
+            <!-- 全局状态条：每一页都能看到"这个 Agent 现在是什么状态、有多大本事" -->
+            <ui:NavigationView.Header>
+                <Border Padding="24,14" Background="{StaticResource SurfaceBrush}"
+                        BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,0,0,1">
+                    <Grid>
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <TextBlock Text="Memory Assistant" FontSize="14" FontWeight="SemiBold"
+                                       Foreground="{StaticResource TextPrimaryBrush}" />
+                            <Border Style="{StaticResource StatusDotStyle}" Margin="10,0,0,0"
+                                    Background="{Binding ShellState, Converter={StaticResource StepStateToBrush}}" />
+                            <TextBlock Text="{Binding ShellStatus}" Style="{StaticResource TextMetaStyle}"
+                                       Margin="6,0,0,0" VerticalAlignment="Center" />
+                        </StackPanel>
+                        <TextBlock HorizontalAlignment="Right" VerticalAlignment="Center"
+                                   Style="{StaticResource TextMicroStyle}"
+                                   Text="基于个人聊天记忆 · 感知宿主环境 · 主动执行任务" />
+                    </Grid>
+                </Border>
+            </ui:NavigationView.Header>
+
+            <ui:NavigationView.MenuItems>
+                <ui:NavigationViewItem Content="首页" TargetPageType="views:OverviewView">
+                    <ui:NavigationViewItem.Icon>
+                        <ui:SymbolIcon Symbol="Home24" />
+                    </ui:NavigationViewItem.Icon>
+                </ui:NavigationViewItem>
+                <ui:NavigationViewItem Content="对话" TargetPageType="views:ChatView">
+                    <ui:NavigationViewItem.Icon>
+                        <ui:SymbolIcon Symbol="Chat24" />
+                    </ui:NavigationViewItem.Icon>
+                </ui:NavigationViewItem>
+                <ui:NavigationViewItem Content="任务" TargetPageType="views:TaskView">
+                    <ui:NavigationViewItem.Icon>
+                        <ui:SymbolIcon Symbol="TaskListSquareLtr24" />
+                    </ui:NavigationViewItem.Icon>
+                </ui:NavigationViewItem>
+
+                <!-- 知识：我的聊天记忆（按"人怎么理解"组织，不按表结构） -->
+                <ui:NavigationViewItem Content="知识库" TargetPageType="views:KnowledgeView">
+                    <ui:NavigationViewItem.Icon>
+                        <ui:SymbolIcon Symbol="Book24" />
+                    </ui:NavigationViewItem.Icon>
+                </ui:NavigationViewItem>
+                <ui:NavigationViewItem Content="时间线" TargetPageType="views:TimelineView">
+                    <ui:NavigationViewItem.Icon>
+                        <ui:SymbolIcon Symbol="Calendar24" />
+                    </ui:NavigationViewItem.Icon>
+                </ui:NavigationViewItem>
+                <ui:NavigationViewItem Content="话题" TargetPageType="views:TopicsView">
+                    <ui:NavigationViewItem.Icon>
+                        <ui:SymbolIcon Symbol="Tag24" />
+                    </ui:NavigationViewItem.Icon>
+                </ui:NavigationViewItem>
+                <ui:NavigationViewItem Content="画像" TargetPageType="views:ProfilesView">
+                    <ui:NavigationViewItem.Icon>
+                        <ui:SymbolIcon Symbol="Person24" />
+                    </ui:NavigationViewItem.Icon>
+                </ui:NavigationViewItem>
+                <ui:NavigationViewItem Content="承诺" TargetPageType="views:CommitmentsView">
+                    <ui:NavigationViewItem.Icon>
+                        <ui:SymbolIcon Symbol="Checkmark24" />
+                    </ui:NavigationViewItem.Icon>
+                </ui:NavigationViewItem>
+
+                <!-- 智能体：它是怎么工作的（课程展示入口） -->
+                <ui:NavigationViewItemHeader Text="智能体" />
+                <ui:NavigationViewItem Content="环境" TargetPageType="views:EnvironmentView">
+                    <ui:NavigationViewItem.Icon>
+                        <ui:SymbolIcon Symbol="Pulse24" />
+                    </ui:NavigationViewItem.Icon>
+                </ui:NavigationViewItem>
+                <ui:NavigationViewItem Content="工作流" TargetPageType="views:WorkflowView">
+                    <ui:NavigationViewItem.Icon>
+                        <ui:SymbolIcon Symbol="Flowchart24" />
+                    </ui:NavigationViewItem.Icon>
+                </ui:NavigationViewItem>
+                <ui:NavigationViewItem Content="工具" TargetPageType="views:ToolsView">
+                    <ui:NavigationViewItem.Icon>
+                        <ui:SymbolIcon Symbol="Wrench24" />
+                    </ui:NavigationViewItem.Icon>
+                </ui:NavigationViewItem>
+                <ui:NavigationViewItem Content="搜索" TargetPageType="views:SearchView">
+                    <ui:NavigationViewItem.Icon>
+                        <ui:SymbolIcon Symbol="Search24" />
+                    </ui:NavigationViewItem.Icon>
+                </ui:NavigationViewItem>
+            </ui:NavigationView.MenuItems>
+
+            <ui:NavigationView.FooterMenuItems>
+                <ui:NavigationViewItem Content="设置" TargetPageType="views:SettingsView">
+                    <ui:NavigationViewItem.Icon>
+                        <ui:SymbolIcon Symbol="Settings24" />
+                    </ui:NavigationViewItem.Icon>
+                </ui:NavigationViewItem>
+            </ui:NavigationView.FooterMenuItems>
+        </ui:NavigationView>
+    </Grid>
+</ui:FluentWindow>

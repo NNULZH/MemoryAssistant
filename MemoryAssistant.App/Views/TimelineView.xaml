@@ -1,0 +1,103 @@
+<UserControl x:Class="MemoryAssistant.App.Views.TimelineView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:MemoryAssistant.App.ViewModels"
+             xmlns:views="clr-namespace:MemoryAssistant.App.Views"
+             d:DataContext="{d:DesignInstance Type=vm:TimelineViewModel}"
+             mc:Ignorable="d"
+             Loaded="OnLoaded">
+    <Grid Margin="{StaticResource PagePadding}">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <!-- V4.1：切页不再无条件重拉，所以这里必须留一个手动刷新入口 + 说明当前间隔 -->
+        <Grid Grid.Row="0" Margin="0,0,0,12">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <StackPanel Grid.Column="0">
+                <TextBlock Text="{Binding StatusText}" Style="{StaticResource TextMetaStyle}" />
+                <TextBlock Text="{Binding Refresh.Hint}" Style="{StaticResource TextMetaStyle}"
+                           FontSize="11" Opacity="0.7" />
+            </StackPanel>
+            <Button Grid.Column="1" Content="刷新" Command="{Binding LoadCommand}"
+                    Style="{StaticResource GhostButtonStyle}" VerticalAlignment="Center"
+                    IsEnabled="{Binding IsBusy, Converter={StaticResource InverseBoolConverter}}" />
+        </Grid>
+
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="150" />
+                <ColumnDefinition Width="220" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <!-- 月份 -->
+            <ListBox Grid.Column="0" ItemsSource="{Binding Months}"
+                     SelectedItem="{Binding SelectedMonth}"
+                     VirtualizingStackPanel.IsVirtualizing="True">
+                <ListBox.ItemTemplate>
+                    <DataTemplate>
+                        <TextBlock Text="{Binding}" Style="{StaticResource TextBodyStyle}" />
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+
+            <!-- 日期 -->
+            <ListBox Grid.Column="1" ItemsSource="{Binding Days}"
+                     SelectedItem="{Binding SelectedDay}"
+                     Margin="8,0,0,0"
+                     VirtualizingStackPanel.IsVirtualizing="True"
+                     VirtualizingStackPanel.VirtualizationMode="Recycling">
+                <ListBox.ItemTemplate>
+                    <DataTemplate>
+                        <TextBlock Text="{Binding Display}" Style="{StaticResource TextBodyStyle}" />
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+
+            <!-- 当日会话详情 -->
+            <ScrollViewer Grid.Column="2" Margin="12,0,0,0" VerticalScrollBarVisibility="Auto">
+                <ItemsControl ItemsSource="{Binding DayDetails}">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <VirtualizingStackPanel IsVirtualizing="True" VirtualizationMode="Recycling" />
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Border Style="{StaticResource CardBorderStyle}" Cursor="Hand"
+                                    ToolTip="点一下：看这段对话的完整聊天记录"
+                                    MouseLeftButtonUp="Chunk_Click">
+                                <StackPanel>
+                                    <TextBlock Text="{Binding SessionName}" FontWeight="SemiBold"
+                                               Style="{StaticResource TextBodyStyle}" />
+                                    <TextBlock Text="{Binding Text}" Margin="0,6,0,0"
+                                               Style="{StaticResource TextPreviewStyle}" />
+                                </StackPanel>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </ScrollViewer>
+
+            <!-- 空状态：索引里还没有数据时，别留一片空白 -->
+            <views:EmptyStateView Grid.Column="0" Grid.ColumnSpan="3"
+                                  Icon="CalendarLtr24"
+                                  Title="还没有可回看的时间线"
+                                  Hint="时间线来自本地索引：先在设置页做一次索引，或在对话页随便问一句都能触发补齐。">
+                <views:EmptyStateView.Visibility>
+                    <MultiBinding Converter="{StaticResource EmptyStateVisibility}">
+                        <Binding Path="Months" />
+                        <Binding Path="IsBusy" />
+                    </MultiBinding>
+                </views:EmptyStateView.Visibility>
+            </views:EmptyStateView>
+        </Grid>
+    </Grid>
+</UserControl>

@@ -1,0 +1,56 @@
+<ui:FluentWindow x:Class="MemoryAssistant.App.Views.UserChoiceWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+        Title="Agent 请求你的决定"
+        Width="520" SizeToContent="Height"
+        ResizeMode="NoResize"
+        ShowInTaskbar="False"
+        WindowStartupLocation="CenterOwner"
+        ExtendsContentIntoTitleBar="True"
+        WindowBackdropType="Mica"
+        WindowCornerPreference="Round">
+    <!--
+        统一的"用户决策"弹窗（规范 §4：只有一套确认/选择交互）。
+        两个来源都走这里：Agent 主动调用 request_user_confirmation；写操作闸门（ActionConfirmationGate）。
+        选项由调用方给（2~N 个），第一项是主操作，默认项获得焦点（高风险操作的默认项是"取消"）。
+    -->
+    <Grid Margin="24,48,24,20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <StackPanel Grid.Row="0" Orientation="Horizontal">
+            <ui:SymbolIcon Symbol="QuestionCircle24" FontSize="22" VerticalAlignment="Center"
+                           Foreground="{StaticResource BrandBrush}" />
+            <TextBlock x:Name="TitleText" Text="Agent 请求你的决定"
+                       FontSize="15" FontWeight="SemiBold" Margin="10,0,0,0" VerticalAlignment="Center"
+                       Foreground="{StaticResource TextPrimaryBrush}" />
+        </StackPanel>
+
+        <TextBlock x:Name="QuestionText" Grid.Row="1" Margin="0,16,0,0"
+                   FontSize="16" FontWeight="SemiBold" TextWrapping="Wrap" LineHeight="24"
+                   Foreground="{StaticResource TextPrimaryBrush}" />
+
+        <Border x:Name="ContextBox" Grid.Row="2" Margin="0,14,0,0" Padding="14,12" CornerRadius="8"
+                Background="{StaticResource SurfaceSecondaryBrush}">
+            <TextBlock x:Name="ContextText" TextWrapping="Wrap" FontSize="13" LineHeight="21"
+                       Foreground="{StaticResource TextSecondaryBrush}" />
+        </Border>
+
+        <StackPanel Grid.Row="3" Margin="0,18,0,0">
+            <ItemsControl x:Name="OptionList">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <WrapPanel HorizontalAlignment="Right" />
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+            </ItemsControl>
+            <TextBlock Margin="2,10,0,0" Style="{StaticResource TextMicroStyle}"
+                       Text="回车执行默认项（默认项已获焦点）· Esc 取消" />
+        </StackPanel>
+    </Grid>
+</ui:FluentWindow>

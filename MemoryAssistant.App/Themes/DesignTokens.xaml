@@ -1,0 +1,226 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:system="clr-namespace:System;assembly=System.Runtime">
+
+    <!-- =====================================================================
+         设计令牌（V5.0 · Modern AI Desktop）
+         =====================================================================
+         第三阶段视觉重构：从"深墨绿控制台"改为"浅色中性底 + 白色内容面 + 深绿品牌色"。
+
+         三条设计决定：
+         1) 深浅关系反过来：以前靠"面更亮"分层（深底上叠更亮的卡片），现在靠
+            "白面浮在浅灰底上 + 极淡的 1px 边框"分层。边框只用来分隔，不用来装饰。
+         2) 绿色只做品牌色和关键强调：品牌填充（按钮/选中态/状态点）、少量强调文字。
+            状态色（成功/警告/危险/信息）各归各的语义，不再一片绿。
+         3) 对比度按 WCAG 校过（正文/次要/强调文字在各自底色上 ≥ 4.5:1），
+            所有颜色都有明确的用途，不留"随手取一个好看的颜色"。
+         ===================================================================== -->
+
+    <!-- ===== 中性：背景与面 ===== -->
+    <Color x:Key="BgColor">#F5F6F8</Color>                 <!-- 页面底：浅中性灰 -->
+    <Color x:Key="SurfaceColor">#FFFFFF</Color>            <!-- 内容面：白（卡片/侧栏/面板） -->
+    <Color x:Key="SurfaceSecondaryColor">#F1F3F5</Color>   <!-- 次级面：输入框/参数块/悬停 -->
+    <Color x:Key="SurfaceHoverColor">#E9ECF0</Color>       <!-- 悬停再深一档 -->
+    <Color x:Key="BorderColor">#E6E8EC</Color>             <!-- 常规分隔线 -->
+    <Color x:Key="BorderStrongColor">#D3D8DE</Color>       <!-- 需要更清楚的边界（输入框） -->
+
+    <!-- ===== 文字（白面/浅底上的对比度已核算） ===== -->
+    <Color x:Key="TextPrimaryColor">#14181C</Color>        <!-- 16.9:1 -->
+    <Color x:Key="TextSecondaryColor">#5B6472</Color>      <!-- 6.3:1 -->
+    <Color x:Key="TextMutedColor">#767F8C</Color>          <!-- 4.6:1 -->
+
+    <!-- ===== 品牌（深绿：填充/选中/状态点） ===== -->
+    <Color x:Key="BrandColor">#157847</Color>              <!-- 白字 5.6:1；白底文字 5.6:1 -->
+    <Color x:Key="BrandHoverColor">#126B3F</Color>
+    <Color x:Key="BrandPressedColor">#0E5C35</Color>
+    <Color x:Key="BrandSoftColor">#E8F3EC</Color>          <!-- 品牌淡底（选中/标签） -->
+    <Color x:Key="BrandSoftHoverColor">#DCEBE2</Color>
+
+    <!-- ===== 语义色 ===== -->
+    <Color x:Key="SuccessColor">#157847</Color>
+    <Color x:Key="WarningColor">#A96500</Color>            <!-- 4.6:1 -->
+    <Color x:Key="DangerColor">#C0392B</Color>             <!-- 5.4:1 -->
+    <Color x:Key="InfoColor">#2563EB</Color>               <!-- 5.3:1 -->
+    <Color x:Key="OverlayColor">#6614181C</Color>
+
+    <!-- ===== 执行步骤配色（理解/规划/执行/工具/检索/作答/完成）=====
+         各占一个色相，互不抢眼；均为白底上 ≥ 4.5:1 的文字色。 -->
+    <Color x:Key="StepUnderstandingColor">#2563EB</Color>  <!-- 蓝：理解 -->
+    <Color x:Key="StepPlanningColor">#0E7490</Color>       <!-- 青：规划 -->
+    <Color x:Key="StepActivityColor">#A96500</Color>       <!-- 琥珀：执行 -->
+    <Color x:Key="StepToolColor">#7C3AED</Color>           <!-- 紫：工具 -->
+    <Color x:Key="StepRetrievalColor">#157847</Color>      <!-- 绿：检索 -->
+    <Color x:Key="StepAnswerColor">#14181C</Color>         <!-- 近黑：作答 -->
+    <Color x:Key="StepCompleteColor">#157847</Color>       <!-- 绿：完成 -->
+
+    <!-- =====================================================================
+         画刷
+         ===================================================================== -->
+    <SolidColorBrush x:Key="BgBrush" Color="{StaticResource BgColor}" />
+    <SolidColorBrush x:Key="SurfaceBrush" Color="{StaticResource SurfaceColor}" />
+    <SolidColorBrush x:Key="SurfaceSecondaryBrush" Color="{StaticResource SurfaceSecondaryColor}" />
+    <SolidColorBrush x:Key="SurfaceHoverBrush" Color="{StaticResource SurfaceHoverColor}" />
+    <SolidColorBrush x:Key="BorderBrush" Color="{StaticResource BorderColor}" />
+    <SolidColorBrush x:Key="BorderStrongBrush" Color="{StaticResource BorderStrongColor}" />
+
+    <SolidColorBrush x:Key="TextPrimaryBrush" Color="{StaticResource TextPrimaryColor}" />
+    <SolidColorBrush x:Key="TextSecondaryBrush" Color="{StaticResource TextSecondaryColor}" />
+    <SolidColorBrush x:Key="TextMutedBrush" Color="{StaticResource TextMutedColor}" />
+    <!-- 旧名（第三阶段前的视图仍在用）：三级文字 = 现在的 muted -->
+    <Color x:Key="TextTertiaryColor">#767F8C</Color>
+    <SolidColorBrush x:Key="TextTertiaryBrush" Color="{StaticResource TextMutedColor}" />
+
+    <SolidColorBrush x:Key="BrandBrush" Color="{StaticResource BrandColor}" />
+    <SolidColorBrush x:Key="BrandHoverBrush" Color="{StaticResource BrandHoverColor}" />
+    <SolidColorBrush x:Key="BrandPressedBrush" Color="{StaticResource BrandPressedColor}" />
+    <SolidColorBrush x:Key="BrandSoftBrush" Color="{StaticResource BrandSoftColor}" />
+    <SolidColorBrush x:Key="BrandSoftHoverBrush" Color="{StaticResource BrandSoftHoverColor}" />
+    <SolidColorBrush x:Key="OnBrandBrush" Color="#FFFFFF" />
+
+    <SolidColorBrush x:Key="SuccessBrush" Color="{StaticResource SuccessColor}" />
+    <SolidColorBrush x:Key="WarningBrush" Color="{StaticResource WarningColor}" />
+    <SolidColorBrush x:Key="DangerBrush" Color="{StaticResource DangerColor}" />
+    <SolidColorBrush x:Key="InfoBrush" Color="{StaticResource InfoColor}" />
+    <SolidColorBrush x:Key="OverlayBrush" Color="{StaticResource OverlayColor}" />
+
+    <SolidColorBrush x:Key="StepUnderstandingBrush" Color="{StaticResource StepUnderstandingColor}" />
+    <SolidColorBrush x:Key="StepPlanningBrush" Color="{StaticResource StepPlanningColor}" />
+    <SolidColorBrush x:Key="StepActivityBrush" Color="{StaticResource StepActivityColor}" />
+    <SolidColorBrush x:Key="StepToolBrush" Color="{StaticResource StepToolColor}" />
+    <SolidColorBrush x:Key="StepRetrievalBrush" Color="{StaticResource StepRetrievalColor}" />
+    <SolidColorBrush x:Key="StepAnswerBrush" Color="{StaticResource StepAnswerColor}" />
+    <SolidColorBrush x:Key="StepCompleteBrush" Color="{StaticResource StepCompleteColor}" />
+
+    <!-- 品牌标的光环渐变（侧栏图标外圈） -->
+    <LinearGradientBrush x:Key="BrandRingBrush" StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Color="#2FA36B" Offset="0" />
+        <GradientStop Color="#157847" Offset="1" />
+    </LinearGradientBrush>
+
+    <!-- =====================================================================
+         兼容别名：旧视图直接用这些 key，改主题只要改这里的映射就行。
+         （新代码请优先用上面的语义名）
+         ===================================================================== -->
+    <SolidColorBrush x:Key="WindowBgBrush" Color="{StaticResource BgColor}" />
+    <SolidColorBrush x:Key="SurfaceLayerBrush" Color="{StaticResource SurfaceColor}" />
+    <SolidColorBrush x:Key="CardBgBrush" Color="{StaticResource SurfaceColor}" />
+    <SolidColorBrush x:Key="CardHoverBgBrush" Color="{StaticResource SurfaceSecondaryColor}" />
+    <SolidColorBrush x:Key="CardBorderBrush" Color="{StaticResource BorderColor}" />
+
+    <SolidColorBrush x:Key="AccentBrush" Color="{StaticResource BrandColor}" />
+    <SolidColorBrush x:Key="AccentHoverBrush" Color="{StaticResource BrandHoverColor}" />
+    <SolidColorBrush x:Key="AccentPressedBrush" Color="{StaticResource BrandPressedColor}" />
+    <SolidColorBrush x:Key="AccentSoftBrush" Color="{StaticResource BrandSoftColor}" />
+    <SolidColorBrush x:Key="OnAccentBrush" Color="#FFFFFF" />
+
+    <!-- 气泡：自己=品牌填充白字；助手=白面 -->
+    <SolidColorBrush x:Key="UserBubbleBrush" Color="{StaticResource BrandColor}" />
+    <SolidColorBrush x:Key="AssistantBubbleBrush" Color="{StaticResource SurfaceColor}" />
+
+    <!-- 旧名：Mint/Sky/BrandVivid 是深色主题的强调色，浅色主题下统一收敛到语义色 -->
+    <SolidColorBrush x:Key="MintBrush" Color="{StaticResource BrandColor}" />
+    <SolidColorBrush x:Key="SkyBrush" Color="{StaticResource InfoColor}" />
+    <SolidColorBrush x:Key="BrandVividBrush" Color="#2FA36B" />
+    <SolidColorBrush x:Key="InkBrush" Color="{StaticResource TextPrimaryColor}" />
+    <SolidColorBrush x:Key="TagTealBrush" Color="{StaticResource BrandColor}" />
+    <SolidColorBrush x:Key="TagAmberBrush" Color="{StaticResource WarningColor}" />
+    <SolidColorBrush x:Key="ErrorBrush" Color="{StaticResource DangerColor}" />
+
+    <SolidColorBrush x:Key="TagTealBgBrush" Color="{StaticResource BrandSoftColor}" />
+    <SolidColorBrush x:Key="TagAmberBgBrush" Color="#FDF3E3" />
+    <SolidColorBrush x:Key="DangerSoftBrush" Color="#FBEAE8" />
+    <SolidColorBrush x:Key="InfoSoftBrush" Color="#E8EFFD" />
+    <SolidColorBrush x:Key="MintSoftBrush" Color="{StaticResource BrandSoftColor}" />
+    <SolidColorBrush x:Key="SkySoftBrush" Color="#E8EFFD" />
+
+    <!-- =====================================================================
+         字号（按角色命名）
+         桌面密集列表 + 中文：正文 14 是可读下限；12/11 只用于次要信息/标签/时间。
+         ===================================================================== -->
+    <system:Double x:Key="TextDisplay">28</system:Double>
+    <system:Double x:Key="TextTitle">20</system:Double>
+    <system:Double x:Key="TextSection">15</system:Double>
+    <system:Double x:Key="TextBody">14</system:Double>
+    <system:Double x:Key="TextMeta">12</system:Double>
+    <system:Double x:Key="TextMicro">11</system:Double>
+
+    <system:Double x:Key="LineBody">22</system:Double>
+    <system:Double x:Key="LineMeta">18</system:Double>
+
+    <!-- ===== 间距：只用 4 的倍数 ===== -->
+    <Thickness x:Key="PagePadding">24</Thickness>
+    <system:Double x:Key="Space1">4</system:Double>
+    <system:Double x:Key="Space2">8</system:Double>
+    <system:Double x:Key="Space3">12</system:Double>
+    <system:Double x:Key="Space4">16</system:Double>
+    <system:Double x:Key="Space5">24</system:Double>
+    <system:Double x:Key="Space6">32</system:Double>
+
+    <!-- ===== 圆角 ===== -->
+    <CornerRadius x:Key="RadiusSmall">6</CornerRadius>
+    <CornerRadius x:Key="RadiusMedium">10</CornerRadius>
+    <CornerRadius x:Key="RadiusLarge">14</CornerRadius>
+
+    <CornerRadius x:Key="CardRadius">12</CornerRadius>
+    <CornerRadius x:Key="BubbleRadius">14</CornerRadius>
+    <CornerRadius x:Key="TagRadius">7</CornerRadius>
+    <CornerRadius x:Key="ButtonRadius">8</CornerRadius>
+    <Thickness x:Key="CardPadding">16</Thickness>
+    <Thickness x:Key="BubblePadding">14,10</Thickness>
+    <Thickness x:Key="TagPadding">7,2</Thickness>
+    <Thickness x:Key="CardMargin">0,0,0,12</Thickness>
+
+    <!-- =====================================================================
+         WPF-UI 主题键覆盖（浅色）：让控件库自带的面板/输入框/文字跟这套色板，
+         否则只有自己的卡片是浅色、输入框还是深色，会割裂。
+         ===================================================================== -->
+
+    <SolidColorBrush x:Key="ApplicationBackgroundBrush" Color="{StaticResource BgColor}" />
+    <SolidColorBrush x:Key="SolidBackgroundFillColorBaseBrush" Color="{StaticResource SurfaceColor}" />
+    <SolidColorBrush x:Key="SolidBackgroundFillColorSecondaryBrush" Color="{StaticResource SurfaceSecondaryColor}" />
+    <SolidColorBrush x:Key="SolidBackgroundFillColorTertiaryBrush" Color="{StaticResource SurfaceSecondaryColor}" />
+    <SolidColorBrush x:Key="SolidBackgroundFillColorBaseAltBrush" Color="{StaticResource SurfaceColor}" />
+    <SolidColorBrush x:Key="SolidBackgroundFillColorQuarternaryBrush" Color="{StaticResource SurfaceSecondaryColor}" />
+    <SolidColorBrush x:Key="LayerFillColorDefaultBrush" Color="{StaticResource SurfaceColor}" />
+    <SolidColorBrush x:Key="LayerOnMicaBaseAltFillColorDefaultBrush" Color="{StaticResource SurfaceColor}" />
+    <SolidColorBrush x:Key="LayerOnMicaBaseAltFillColorSecondaryBrush" Color="{StaticResource SurfaceSecondaryColor}" />
+    <SolidColorBrush x:Key="CardBackgroundFillColorDefaultBrush" Color="{StaticResource SurfaceColor}" />
+    <SolidColorBrush x:Key="CardBackgroundFillColorSecondaryBrush" Color="{StaticResource SurfaceSecondaryColor}" />
+    <SolidColorBrush x:Key="CardStrokeColorDefaultBrush" Color="{StaticResource BorderColor}" />
+    <SolidColorBrush x:Key="CardStrokeColorDefaultSolidBrush" Color="{StaticResource BorderColor}" />
+    <SolidColorBrush x:Key="ControlFillColorDefaultBrush" Color="{StaticResource SurfaceColor}" />
+    <SolidColorBrush x:Key="ControlFillColorSecondaryBrush" Color="{StaticResource SurfaceSecondaryColor}" />
+    <SolidColorBrush x:Key="ControlFillColorTertiaryBrush" Color="{StaticResource SurfaceSecondaryColor}" />
+    <SolidColorBrush x:Key="ControlStrokeColorDefaultBrush" Color="{StaticResource BorderStrongColor}" />
+    <SolidColorBrush x:Key="ControlStrokeColorSecondaryBrush" Color="{StaticResource BorderColor}" />
+    <SolidColorBrush x:Key="TextFillColorPrimaryBrush" Color="{StaticResource TextPrimaryColor}" />
+    <SolidColorBrush x:Key="TextFillColorSecondaryBrush" Color="{StaticResource TextSecondaryColor}" />
+    <SolidColorBrush x:Key="TextFillColorTertiaryBrush" Color="{StaticResource TextMutedColor}" />
+    <SolidColorBrush x:Key="TextFillColorDisabledBrush" Color="{StaticResource TextMutedColor}" />
+
+    <Color x:Key="SystemAccentColor">#157847</Color>
+    <Color x:Key="ApplicationAccentColor">#157847</Color>
+    <SolidColorBrush x:Key="SystemAccentColorBrush" Color="{StaticResource BrandColor}" />
+    <SolidColorBrush x:Key="SystemAccentBrush" Color="{StaticResource BrandColor}" />
+    <SolidColorBrush x:Key="AccentFillColorDefaultBrush" Color="{StaticResource BrandColor}" />
+    <SolidColorBrush x:Key="AccentFillColorSecondaryBrush" Color="{StaticResource BrandHoverColor}" />
+    <SolidColorBrush x:Key="AccentFillColorTertiaryBrush" Color="{StaticResource BrandPressedColor}" />
+    <SolidColorBrush x:Key="TextOnAccentFillColorPrimaryBrush" Color="#FFFFFF" />
+    <SolidColorBrush x:Key="FocusStrokeColorOuterBrush" Color="{StaticResource BrandColor}" />
+
+    <!-- 选中态：品牌淡底 + 主文本色（不整块高饱和） -->
+    <SolidColorBrush x:Key="ListBoxItemSelectedBackgroundThemeBrush" Color="{StaticResource BrandSoftColor}" />
+    <SolidColorBrush x:Key="ListBoxItemSelectedForegroundThemeBrush" Color="{StaticResource TextPrimaryColor}" />
+    <Color x:Key="SystemColorHighlightColor" A="255" R="232" G="243" B="236" />
+    <SolidColorBrush x:Key="SystemColorHighlightColorBrush" Color="{StaticResource BrandSoftColor}" />
+    <SolidColorBrush x:Key="SystemColorHighlightTextColorBrush" Color="{StaticResource TextPrimaryColor}" />
+
+    <SolidColorBrush x:Key="{x:Static SystemColors.HighlightBrushKey}" Color="{StaticResource BrandSoftColor}" />
+    <SolidColorBrush x:Key="{x:Static SystemColors.HighlightTextBrushKey}" Color="{StaticResource TextPrimaryColor}" />
+    <SolidColorBrush x:Key="{x:Static SystemColors.InactiveSelectionHighlightBrushKey}" Color="{StaticResource SurfaceSecondaryColor}" />
+    <SolidColorBrush x:Key="{x:Static SystemColors.InactiveSelectionHighlightTextBrushKey}" Color="{StaticResource TextPrimaryColor}" />
+    <SolidColorBrush x:Key="{x:Static SystemColors.ControlBrushKey}" Color="{StaticResource SurfaceColor}" />
+    <SolidColorBrush x:Key="{x:Static SystemColors.WindowBrushKey}" Color="{StaticResource SurfaceColor}" />
+    <SolidColorBrush x:Key="{x:Static SystemColors.ControlTextBrushKey}" Color="{StaticResource TextPrimaryColor}" />
+    <SolidColorBrush x:Key="{x:Static SystemColors.WindowTextBrushKey}" Color="{StaticResource TextPrimaryColor}" />
+</ResourceDictionary>

@@ -1,0 +1,36 @@
+# Build outputs
+bin/
+obj/
+*.user
+
+# IDE
+.vs/
+.idea/
+*.suo
+
+# Runtime data
+data/
+models/
+*.log
+
+# 临时导出与媒体（曾误入库：含真实聊天记录/图片/语音，必须忽略）
+_tmp*/
+*.jsonl
+ocr_dump.png
+ocr_dump.*
+agent v1.zip
+
+# 本地发布产物（体积大且可由源码重建）
+_publish/
+
+# Config secrets
+appsettings.local.json
+
+# Python
+__pycache__/
+*.pyc
+python_bridge/.venv/
+
+# OS
+Thumbs.db
+.DS_Store

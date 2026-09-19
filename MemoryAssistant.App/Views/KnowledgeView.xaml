@@ -1,0 +1,140 @@
+<UserControl x:Class="MemoryAssistant.App.Views.KnowledgeView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+             xmlns:vm="clr-namespace:MemoryAssistant.App.ViewModels"
+             d:DataContext="{d:DesignInstance Type=vm:KnowledgeViewModel}"
+             mc:Ignorable="d">
+    <Grid Margin="24,18,24,20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <!-- 标题 -->
+        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="2,0,0,10">
+            <TextBlock Text="知识库" Style="{StaticResource TextTitleStyle}" />
+            <TextBlock Text="Agent 的长期记忆：真实微信聊天记录被索引成可检索的记忆片段"
+                       Style="{StaticResource TextMetaStyle}" Margin="12,3,0,0" VerticalAlignment="Center" />
+        </StackPanel>
+
+        <!-- 索引规模 + 操作 -->
+        <Border Grid.Row="1" Style="{StaticResource CardBorderStyle}" Padding="16">
+            <StackPanel>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Grid.Column="0">
+                        <TextBlock Text="{Binding ChunkCountText}" Style="{StaticResource StatNumberStyle}" />
+                        <TextBlock Text="记忆片段" Style="{StaticResource StatLabelStyle}" Margin="0,4,0,0" />
+                    </StackPanel>
+                    <StackPanel Grid.Column="1">
+                        <TextBlock Text="{Binding SessionCountText}" Style="{StaticResource StatNumberStyle}" />
+                        <TextBlock Text="会话" Style="{StaticResource StatLabelStyle}" Margin="0,4,0,0" />
+                    </StackPanel>
+                    <StackPanel Grid.Column="2">
+                        <TextBlock Text="{Binding MessageCountText}" Style="{StaticResource StatNumberStyle}" />
+                        <TextBlock Text="消息总数" Style="{StaticResource StatLabelStyle}" Margin="0,4,0,0" />
+                    </StackPanel>
+                    <StackPanel Grid.Column="3">
+                        <TextBlock Text="{Binding DimText}" Style="{StaticResource StatNumberStyle}" />
+                        <TextBlock Text="向量维度" Style="{StaticResource StatLabelStyle}" Margin="0,4,0,0" />
+                    </StackPanel>
+                    <StackPanel Grid.Column="4">
+                        <TextBlock Text="{Binding BuiltAtText}" Style="{StaticResource TextSectionStyle}"
+                                   TextWrapping="Wrap" VerticalAlignment="Bottom" />
+                        <TextBlock Text="最后索引时间" Style="{StaticResource StatLabelStyle}" Margin="0,4,0,0" />
+                    </StackPanel>
+                </Grid>
+
+                <StackPanel Orientation="Horizontal" Margin="0,14,0,0">
+                    <Button Content="刷新状态" Command="{Binding RefreshStatusCommand}"
+                            Style="{StaticResource GhostButtonStyle}" Height="30" Padding="14,0" />
+                    <Button Content="增量补齐（只处理新消息）" Command="{Binding IncrementalIndexCommand}"
+                            Style="{StaticResource AccentButtonStyle}" Height="30" Padding="14,0" Margin="8,0,0,0" />
+                    <Button Content="{Binding RebuildButtonText}" Command="{Binding RebuildIndexCommand}"
+                            Style="{StaticResource GhostButtonStyle}" Height="30" Padding="14,0" Margin="8,0,0,0" />
+                </StackPanel>
+
+                <TextBlock Text="{Binding IndexNote}" Style="{StaticResource TextMicroStyle}" Margin="0,10,0,0" />
+                <TextBlock Text="{Binding ActionStatus}" Style="{StaticResource TextMicroStyle}" Margin="0,4,0,0"
+                           Foreground="{StaticResource MintBrush}" TextWrapping="Wrap"
+                           Visibility="{Binding ActionStatus, Converter={StaticResource NullToCollapsedConverter}}" />
+            </StackPanel>
+        </Border>
+
+        <!-- 检索演示：知识库"真的能查"的现场证据 -->
+        <Border Grid.Row="2" Style="{StaticResource CardBorderStyle}" Padding="16" Margin="0,0,0,10">
+            <StackPanel>
+                <TextBlock Text="检索演示" Style="{StaticResource TextSectionStyle}" />
+                <TextBlock Text="{Binding SearchHint}" Style="{StaticResource TextMicroStyle}" Margin="0,4,0,0"
+                           TextWrapping="Wrap" />
+                <Grid Margin="0,10,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <ui:TextBox Grid.Column="0" Text="{Binding Query, UpdateSourceTrigger=PropertyChanged}"
+                                PlaceholderText="输入一句话，例如：实习经历" MinHeight="34" KeyDown="Query_KeyDown" />
+                    <Button Grid.Column="1" Content="检索知识库" Command="{Binding SearchCommand}"
+                            Style="{StaticResource AccentButtonStyle}" Height="34" Padding="16,0" Margin="8,0,0,0"
+                            IsEnabled="{Binding IsSearching, Converter={StaticResource InverseBoolConverter}}" />
+                </Grid>
+                <TextBlock Text="{Binding SearchNote}" Style="{StaticResource TextMicroStyle}" Margin="0,10,0,0"
+                           TextWrapping="Wrap" Foreground="{StaticResource MintBrush}"
+                           Visibility="{Binding SearchNote, Converter={StaticResource NullToCollapsedConverter}}" />
+            </StackPanel>
+        </Border>
+
+        <!-- 召回结果：每条记忆带来源/时间/相关度 -->
+        <Border Grid.Row="3" Style="{StaticResource CardBorderStyle}" Padding="16">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+                <TextBlock Grid.Row="0" Text="召回的记忆" Style="{StaticResource TextSectionStyle}" Margin="0,0,0,8" />
+                <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                    <ItemsControl ItemsSource="{Binding RecallItems}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border Margin="0,0,0,8" Padding="12" CornerRadius="{StaticResource CardRadius}"
+                                        Background="{StaticResource CardHoverBgBrush}"
+                                        BorderBrush="{StaticResource CardBorderBrush}" BorderThickness="1">
+                                    <StackPanel>
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock Text="{Binding Rank, StringFormat='记忆 #{0:000}'}"
+                                                       FontSize="12" FontWeight="SemiBold"
+                                                       Foreground="{StaticResource MintBrush}" />
+                                            <TextBlock Text="{Binding SessionName}" FontSize="12" Margin="10,0,0,0"
+                                                       Foreground="{StaticResource TextPrimaryBrush}" />
+                                            <TextBlock Text="{Binding Date}" FontSize="12" Margin="10,0,0,0"
+                                                       Foreground="{StaticResource TextSecondaryBrush}" />
+                                            <TextBlock Text="{Binding ScoreText}" FontSize="12" Margin="10,0,0,0"
+                                                       Foreground="{StaticResource SkyBrush}" />
+                                            <TextBlock Text="{Binding SourceText}" FontSize="12" Margin="10,0,0,0"
+                                                       Foreground="{StaticResource TextTertiaryBrush}" />
+                                            <TextBlock Text="{Binding SizeText}" FontSize="12" Margin="10,0,0,0"
+                                                       Foreground="{StaticResource TextTertiaryBrush}" />
+                                        </StackPanel>
+                                        <TextBlock Text="{Binding Preview}" Style="{StaticResource TextPreviewStyle}"
+                                                   Margin="0,6,0,0" />
+                                    </StackPanel>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>

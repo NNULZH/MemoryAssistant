@@ -1,0 +1,88 @@
+<UserControl x:Class="MemoryAssistant.App.Views.SettingsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:MemoryAssistant.App.ViewModels"
+             d:DataContext="{d:DesignInstance Type=vm:SettingsViewModel}"
+             mc:Ignorable="d">
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel Margin="20" MaxWidth="520" HorizontalAlignment="Left">
+            <TextBlock Text="LLM 配置" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,8"
+                       Foreground="{StaticResource TextPrimaryBrush}" />
+
+            <TextBlock Text="API Key" Margin="0,8,0,4" Foreground="{StaticResource TextSecondaryBrush}" />
+            <PasswordBox x:Name="ApiKeyBox" PasswordChanged="ApiKey_PasswordChanged" />
+
+            <TextBlock Text="模型" Margin="0,8,0,4" Foreground="{StaticResource TextSecondaryBrush}" />
+            <TextBox Text="{Binding Model, UpdateSourceTrigger=PropertyChanged}" />
+
+            <TextBlock Text="Base URL" Margin="0,8,0,4" Foreground="{StaticResource TextSecondaryBrush}" />
+            <TextBox Text="{Binding BaseUrl, UpdateSourceTrigger=PropertyChanged}" />
+
+            <TextBlock Text="Embedding 后端" Margin="0,8,0,4" Foreground="{StaticResource TextSecondaryBrush}" />
+            <TextBox Text="{Binding EmbedBackend, UpdateSourceTrigger=PropertyChanged}" />
+
+            <TextBlock Text="RAG TopK" Margin="0,8,0,4" Foreground="{StaticResource TextSecondaryBrush}" />
+            <TextBox Text="{Binding TopK}" />
+
+            <StackPanel Orientation="Horizontal" Margin="0,20,0,0">
+                <Button Content="保存（写入 appsettings.local.json）" Command="{Binding SaveCommand}"
+                        HorizontalAlignment="Left"
+                        Style="{StaticResource AccentButtonStyle}" />
+                <!-- 显式保存语义：改了但没点保存时必须看得见，否则用户以为已经自动存了 -->
+                <TextBlock Text="● 有改动未保存" Margin="10,0,0,0" VerticalAlignment="Center"
+                           Foreground="{StaticResource WarningBrush}"
+                           Visibility="{Binding HasUnsavedChanges, Converter={StaticResource BoolToVisibility}}" />
+            </StackPanel>
+            <TextBlock Text="{Binding StatusText}" Foreground="{StaticResource AccentBrush}" Margin="0,8,0,0" TextWrapping="Wrap" />
+
+            <Separator Style="{StaticResource FluentSeparatorStyle}" />
+
+            <!-- V4.1：刷新节流——把"数据刷新得太快"的两个旋钮暴露出来，改完点下面的「保存」生效 -->
+            <TextBlock Text="刷新节流" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,8"
+                       Foreground="{StaticResource TextPrimaryBrush}" />
+            <StackPanel Orientation="Horizontal">
+                <TextBlock Text="页面自动刷新间隔（秒，0=只在手动刷新时加载）" VerticalAlignment="Center"
+                           Foreground="{StaticResource TextSecondaryBrush}" />
+                <TextBox Text="{Binding AutoRefreshSeconds, UpdateSourceTrigger=PropertyChanged}"
+                         Width="64" Margin="8,0,0,0" VerticalAlignment="Center" />
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                <TextBlock Text="后台索引补齐间隔（分钟，0=关闭）" VerticalAlignment="Center"
+                           Foreground="{StaticResource TextSecondaryBrush}" />
+                <TextBox Text="{Binding IndexRefreshMinutes, UpdateSourceTrigger=PropertyChanged}"
+                         Width="64" Margin="8,0,0,0" VerticalAlignment="Center" />
+            </StackPanel>
+            <TextBlock Text="改完点下面的「保存」写入 appsettings.local.json；索引间隔立即生效，页面自动刷新间隔在重新进入页面后生效。"
+                       Foreground="{StaticResource TextTertiaryBrush}" FontSize="11" Margin="0,6,0,0" TextWrapping="Wrap" />
+
+            <Separator Style="{StaticResource FluentSeparatorStyle}" />
+
+            <TextBlock Text="索引管理" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,8"
+                       Foreground="{StaticResource TextPrimaryBrush}" />
+            <StackPanel Orientation="Horizontal">
+                <Button Content="刷新状态" Command="{Binding RefreshIndexStatusCommand}"
+                        Style="{StaticResource GhostButtonStyle}"
+                        IsEnabled="{Binding IsIndexBusy, Converter={StaticResource InverseBoolConverter}}" />
+                <Button Content="增量更新" Command="{Binding IncrementalIndexCommand}" Margin="8,0,0,0"
+                        Style="{StaticResource AccentButtonStyle}"
+                        IsEnabled="{Binding IsIndexBusy, Converter={StaticResource InverseBoolConverter}}" />
+                <Button Content="{Binding RebuildButtonText}" Command="{Binding RebuildIndexCommand}" Margin="8,0,0,0"
+                        Style="{StaticResource GhostButtonStyle}"
+                        IsEnabled="{Binding IsIndexBusy, Converter={StaticResource InverseBoolConverter}}" />
+            </StackPanel>
+            <TextBlock Text="{Binding IndexStatusText}" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,8,0,0" TextWrapping="Wrap" />
+
+            <ItemsControl ItemsSource="{Binding IndexLogs}" Margin="0,8,0,0"
+                          Visibility="{Binding IndexLogs, Converter={StaticResource NullToCollapsedConverter}}">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <TextBlock Text="{Binding}" FontFamily="Consolas" FontSize="11" Foreground="{StaticResource TextTertiaryBrush}"
+                                   TextWrapping="Wrap" />
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>
